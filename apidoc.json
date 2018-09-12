@@ -1,0 +1,7 @@
+{
+  "name": "TalkiDoc API Documentation",
+  "version": "0.0.0",
+  "description": "Restful API documentation for TalkiDoc Application - Globalbit soft LTD",
+  "title": "TalkiDoc API Documentation",
+  "url" : "http://localhost:3000/v1"
+}

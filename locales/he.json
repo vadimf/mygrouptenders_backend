@@ -1,0 +1,66 @@
+{
+	"rtl": true,
+	"formatting": {
+		"full_name": "{{firstName}} {{lastName}}",
+		"day_of_week": "יום {{dayOfWeek}}",
+		"between_hours": "בין השעות: {{hours}}",
+		"hours_interval": "{{from}} - {{to}}",
+		"between_hours_separator": ", "
+	},
+	"sms": {
+		"phone_confirmation_code": "קוד האימות שלך ל-UMA הינו: {{code}}",
+		"days_separator": "\n",
+		"provider": {
+			"appointment_created": {
+				"exact_date": {
+					"text": "היי {{providerName}}, אלו הם פרטי ההזמנה שנקבעה באמצעות אתר Uma:\n{{serviceType}}, {{date}}\nכתובת: {{address}}.\nהמזמינה: {{receiverName}} {{receiverPhoneNumber}}\nכמו כן, התווספו לארנקך שבאתר {{providerCoinsGiven}} מטבעות אומה",
+					"date": "{{dayOfWeek}}, {{exactDate}}, {{betweenHours}}"
+				},
+				"recurring": {
+					"text": "היי {{providerName}}, אלו הם פרטי ההזמנה שנקבעה באמצעות אתר Uma:\n{{serviceType}}, {{dates}}\nכתובת: {{address}}.\nהמזמינה: {{receiverName}} {{receiverPhoneNumber}}\nכמו כן, התווספו לארנקך שבאתר {{providerCoinsGiven}} מטבעות אומה",
+					"date": "ימי {{dayOfWeek}}: {{betweenHours}}"
+				}
+			},
+			"appointment_cancelled": {
+				"exact_date": {
+					"text": "היי {{providerName}}, זוהי הודעת ביטול להזמנה שנקבעה באמצעות אתר Uma.\nפרטי ההזמנה המבוטלת:\n{{serviceType}}, {{date}}\nכתובת: {{receiverAddress}}.\nהמזמינה: {{receiverName}} {{receiverPhoneNumber}}\n",
+					"date": "{{dayOfWeek}}, {{exactDate}}, {{betweenHours}}"
+				},
+				"recurring": {
+					"text": "היי {{providerName}}, זוהי הודעת ביטול להזמנה שנקבעה באמצעות אתר Uma.\nפרטי ההזמנה המבוטלת:\n{{serviceType}}, {{dates}}\nכתובת: {{receiverAddress}}.\nהמזמינה: {{receiverName}} {{receiverPhoneNumber}}\n",
+					"recurring_cancellation_hours_date": "ימי {{dayOfWeek}}: {{betweenHours}}",
+					"one_time_cancellation_date": "יום {{dayOfWeek}}, בתאריך {{date}}, בין השעות {{betweenHours}}"
+				}
+			}
+		},
+		"receiver": {
+			"appointment_cancelled": {
+				"exact_date": {
+					"text": "היי {{receiverName}}, זוהי הודעת ביטול להזמנה שנקבעה באמצעות אתר Uma.\nפרטי ההזמנה המבוטלת:\n{{serviceType}}, {{date}}\nכתובת: {{receiverAddress}}.\nהמאמא: {{providerName}} {{providerPhoneNumber}}\n",
+					"date": "{{dayOfWeek}}, {{exactDate}}, {{betweenHours}}"
+				},
+				"recurring": {
+					"text": "היי {{receiverName}}, זוהי הודעת ביטול להזמנה שנקבעה באמצעות אתר Uma.\nפרטי ההזמנה המבוטלת:\n{{serviceType}}, {{dates}}\nכתובת: {{receiverAddress}}.\nהמאמא: {{providerName}} {{providerPhoneNumber}}\n",
+					"recurring_cancellation_hours_date": "ימי {{dayOfWeek}}: {{betweenHours}}",
+					"one_time_cancellation_date": "יום {{dayOfWeek}}, בתאריך {{date}}, בין השעות {{betweenHours}}"
+				}
+			}
+		}
+	},
+	"enums": {
+		"service_type": [
+			"בייביסיטינג",
+			"ניקיון",
+			"בישול"
+		],
+		"day_of_week": [
+			"ראשון",
+			"שני",
+			"שלישי",
+			"רביעי",
+			"חמישי",
+			"שישי",
+			"שבת"
+		]
+	}
+}
