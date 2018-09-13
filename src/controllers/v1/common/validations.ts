@@ -1,4 +1,4 @@
-import { Validation } from "../../../models/validation";
+import { Validation } from '../../../models/validation';
 
 export class Validations {
     public password = new Validation(3, 24);

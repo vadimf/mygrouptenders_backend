@@ -1,5 +1,5 @@
-import * as mongoose from "mongoose";
-import { app } from "../server";
+import * as mongoose from 'mongoose';
+import { app } from '../server';
 
 export interface ITranslationDocument extends mongoose.Document {
     languageCode: string;
@@ -25,12 +25,12 @@ export const TranslatableStringSchema = new mongoose.Schema(
     },
 );
 
-TranslatableStringSchema.method("toString", function() {
-    const language = app.get("language");
+TranslatableStringSchema.method('toString', function() {
+    const language = app.get('language');
     return this.getByLanguageCode(language);
 });
 
-TranslatableStringSchema.method("getByLanguageCode", function(language: string) {
+TranslatableStringSchema.method('getByLanguageCode', function(language: string) {
     const translation = this.translations.find((obj: {languageCode: string}) => {
         return obj.languageCode === language;
     });

@@ -1,6 +1,4 @@
-
-import * as he from "he";
-import { uuidv4 } from "./UUID";
+import { uuidv4 } from './UUID';
 
 /**
  * Common utilities for controller usage
@@ -21,7 +19,7 @@ export class Utilities {
      * @returns {any}
      */
     public static nullOrUndefined(obj?: any): boolean {
-        return obj == null || obj === null || typeof obj === "undefined";
+        return obj == null || obj === null || typeof obj === 'undefined';
     }
 
     /**
@@ -32,7 +30,7 @@ export class Utilities {
      */
     public static isIsraeliIdNumberValid(num: string): boolean {
         let tot = 0;
-        const tz: string = num.padStart("0", 9);
+        const tz: string = num.padStart('0', 9);
 
         for (let i = 0; i < 8; i++) {
             let x = ((i % 2) + 1) * (+tz.charAt(i));
@@ -59,22 +57,22 @@ export class Utilities {
      * @returns {string}
      */
     public static randomString(length: number = 64, includeLowercase: boolean = true, includeUppercase: boolean = true, includeDashes: boolean = false, includeSpecialCharacters: boolean = false): string {
-        let allowedCharacters = "0123456789";
+        let allowedCharacters = '0123456789';
 
         if ( includeLowercase ) {
-            allowedCharacters += "abcdefghijklmnopqrstuvwxyz";
+            allowedCharacters += 'abcdefghijklmnopqrstuvwxyz';
         }
 
         if ( includeUppercase ) {
-            allowedCharacters += "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            allowedCharacters += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         }
 
         if ( includeDashes ) {
-            allowedCharacters += "-_";
+            allowedCharacters += '-_';
         }
 
         if ( includeSpecialCharacters ) {
-            allowedCharacters += "!@#$%^&*()+=";
+            allowedCharacters += '!@#$%^&*()+=';
         }
 
         return Utilities.randomStringByCharacters(length, allowedCharacters);
@@ -87,8 +85,8 @@ export class Utilities {
      * @param {string} allowedCharacters
      * @returns {string}
      */
-    public static randomStringByCharacters(length: number = 64, allowedCharacters: string = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_:-"): string {
-        let text = "";
+    public static randomStringByCharacters(length: number = 64, allowedCharacters: string = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_:-'): string {
+        let text = '';
 
         for (let i = 0; i < length; i++) {
             text += allowedCharacters.charAt(Math.floor(Math.random() * allowedCharacters.length));
@@ -117,9 +115,9 @@ export class Utilities {
  * @returns {any}
  */
 Object.byString = (o: any, s: string) => {
-    s = s.replace(/\[(\w+)]/g, ".$1"); // convert indexes to properties
-    s = s.replace(/^\./, "");           // strip a leading dot
-    const a = s.split(".");
+    s = s.replace(/\[(\w+)]/g, '.$1'); // convert indexes to properties
+    s = s.replace(/^\./, '');           // strip a leading dot
+    const a = s.split('.');
     for (let i = 0, n = a.length; i < n; ++i) {
         const k = a[i];
         if (k in o) {
@@ -225,7 +223,7 @@ Array.prototype.removeItem = function(item: any): number {
  * @returns {number[]}
  */
 Array.prototype.convertStringToNumber = function(): number[] {
-    if ( ! this.isOfType("string") ) {
+    if ( ! this.isOfType('string') ) {
         return null;
     }
 
@@ -332,8 +330,8 @@ String.prototype.isEmail = function(): boolean {
  * @returns {RegExp}
  */
 String.prototype.toRegex = function(): RegExp {
-    const flags = this.replace(/.*\/([gimy]*)$/, "$1");
-    const pattern = this.replace(new RegExp("^/(.*?)/" + flags + "$"), "$1");
+    const flags = this.replace(/.*\/([gimy]*)$/, '$1');
+    const pattern = this.replace(new RegExp('^/(.*?)/' + flags + '$'), '$1');
 
     return new RegExp(pattern, flags);
 };
@@ -344,8 +342,8 @@ String.prototype.toRegex = function(): RegExp {
  * @returns {RegExp}
  */
 String.prototype.searchToRegex = function(removeSpecialCharacters = true, start = true, end = true): RegExp {
-    const searchString = removeSpecialCharacters ? this.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, "") : this;
-    return ("/" + (start ? ".*" : "") + searchString + (end ? ".*" : "") + "/i").toRegex();
+    const searchString = removeSpecialCharacters ? this.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, '') : this;
+    return ('/' + (start ? '.*' : '') + searchString + (end ? '.*' : '') + '/i').toRegex();
 };
 
 /**
@@ -391,24 +389,6 @@ String.prototype.parseJson = function(): any {
 String.prototype.isMongoId = function(): boolean {
     const matches = this.match(/^[0-9a-fA-F]{24}$/);
     return !!matches;
-};
-
-/**
- * Decode a string that contains HTML
- *
- * @returns {boolean}
- */
-String.prototype.decodeHtml = function(): string {
-    return he.decode(this);
-};
-
-/**
- * Encode a string that contains HTML
- *
- * @returns {boolean}
- */
-String.prototype.encodeHtml = function(): string {
-    return he.encode(this);
 };
 
 /**

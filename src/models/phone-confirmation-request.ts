@@ -1,5 +1,5 @@
-import * as mongoose from "mongoose";
-import { IPhoneNumberDocument, PhoneNumberSchema } from "./user/phone-number";
+import * as mongoose from 'mongoose';
+import { IPhoneNumberDocument, PhoneNumberSchema } from './user/phone-number';
 
 export interface IPhoneConfirmationRequestDocument extends mongoose.Document {
     phone: IPhoneNumberDocument;
@@ -18,4 +18,4 @@ const PhoneConfirmationRequestSchema = new mongoose.Schema(
     },
 );
 
-export const PhoneConfirmationRequest = mongoose.model<IPhoneConfirmationRequestDocument>("PhoneConfirmationRequest", PhoneConfirmationRequestSchema, "phone_confirmation_requests");
+export const PhoneConfirmationRequest = mongoose.model<IPhoneConfirmationRequestDocument>('PhoneConfirmationRequest', PhoneConfirmationRequestSchema, 'phone_confirmation_requests');

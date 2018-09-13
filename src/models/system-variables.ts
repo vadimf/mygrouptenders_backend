@@ -1,4 +1,4 @@
-import * as mongoose from "mongoose";
+import * as mongoose from 'mongoose';
 
 export interface ISystemVariablesDocument extends mongoose.Document {
     contactInformation: {
@@ -13,4 +13,4 @@ export const SystemVariablesSchema = new mongoose.Schema(
     },
 );
 
-export const SystemVariables = mongoose.model<ISystemVariablesDocument>("System", SystemVariablesSchema, "system");
+export const SystemVariables = mongoose.model<ISystemVariablesDocument>('System', SystemVariablesSchema, 'system');

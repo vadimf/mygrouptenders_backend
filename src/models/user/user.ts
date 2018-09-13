@@ -1,9 +1,10 @@
-import * as mongoose from "mongoose";
-import { uuidv4 } from "../../utilities/UUID";
-import { AuthenticationTokenSchema, IAuthenticationTokenDocument } from "./authentication-token";
-import { IPassword, IPasswordDocument, Password, PasswordSchema } from "./password";
-import { IPhoneNumberDocument, PhoneNumberSchema } from "./phone-number";
-import { IProfileDocument, ProfileSchema } from "./profile";
+import * as mongoose from 'mongoose';
+
+import { uuidv4 } from '../../utilities/UUID';
+import { AuthenticationTokenSchema, IAuthenticationTokenDocument } from './authentication-token';
+import { IPassword, IPasswordDocument, Password, PasswordSchema } from './password';
+import { IPhoneNumberDocument, PhoneNumberSchema } from './phone-number';
+import { IProfileDocument, ProfileSchema } from './profile';
 
 export interface IUserDocument extends mongoose.Document {
     profile: IProfileDocument;
@@ -42,7 +43,7 @@ export const UserSchema = new mongoose.Schema(
     },
 );
 
-UserSchema.pre("save", function(next) {
+UserSchema.pre<IUserDocument>('save', function(next) {
     if ( this.email ) {
         this.email = this.email.toLowerCase();
     }
@@ -51,7 +52,7 @@ UserSchema.pre("save", function(next) {
 });
 
 // User methods
-UserSchema.method("getPasswordObject", function(password: string) {
+UserSchema.method('getPasswordObject', function(password: string) {
     for ( const passwordObject of this.passwords ) {
         if ( passwordObject.compare(password) ) {
             return passwordObject;
@@ -60,7 +61,7 @@ UserSchema.method("getPasswordObject", function(password: string) {
 
     return null;
 });
-UserSchema.method("changePassword", function(newPassword: string) {
+UserSchema.method('changePassword', function(newPassword: string) {
     if ( ! this.passwords ) {
         this.passwords = [];
     }
@@ -72,7 +73,7 @@ UserSchema.method("changePassword", function(newPassword: string) {
 
     this.passwords = this.passwords.concat([Password.createPassword(newPassword)]);
 });
-UserSchema.method("createAuthToken", function() {
+UserSchema.method('createAuthToken', function() {
     if ( ! this.tokens ) {
         this.tokens = [];
     }
@@ -85,7 +86,7 @@ UserSchema.method("createAuthToken", function() {
 
     return newToken;
 });
-UserSchema.method("block", function(block: boolean) {
+UserSchema.method('block', function(block: boolean) {
     this.blocked = block;
 
     if ( block ) {
@@ -95,12 +96,12 @@ UserSchema.method("block", function(block: boolean) {
         this.blockDate = null;
     }
 });
-UserSchema.method("getCurrentPassword", function() {
+UserSchema.method('getCurrentPassword', function() {
     return this.passwords.find((obj: {current: boolean}) => {
         return obj.current;
     });
 });
-UserSchema.method("commonData", function() {
+UserSchema.method('commonData', function() {
     return {
         id: this._id,
         createdAt: this.createdAt,
@@ -109,7 +110,7 @@ UserSchema.method("commonData", function() {
         email: this.email || null,
     };
 });
-UserSchema.method("selfUser", function() {
+UserSchema.method('selfUser', function() {
     return Object.assign(
         this.commonData(),
         {
@@ -117,7 +118,7 @@ UserSchema.method("selfUser", function() {
         },
     );
 });
-UserSchema.method("toJSON", function() {
+UserSchema.method('toJSON', function() {
     return Object.assign(
         this.commonData(),
         {
@@ -125,7 +126,7 @@ UserSchema.method("toJSON", function() {
         },
     );
 });
-UserSchema.method("toAdministrator", function() {
+UserSchema.method('toAdministrator', function() {
     return Object.assign(
         this.commonData(),
         {
@@ -140,7 +141,7 @@ export const userPopulation: string[] = [
     // Populate the following objects from DB
 ];
 
-UserSchema.static("get", (conditions: any) => User.find(conditions).populate(userPopulation));
-UserSchema.static("getSingle", (conditions: any) => User.findOne(conditions).populate(userPopulation));
+UserSchema.static('get', (conditions: any) => User.find(conditions).populate(userPopulation));
+UserSchema.static('getSingle', (conditions: any) => User.findOne(conditions).populate(userPopulation));
 
-export const User = mongoose.model<IUserDocument, IUserModel>("User", UserSchema, "users");
+export const User = mongoose.model<IUserDocument, IUserModel>('User', UserSchema, 'users');

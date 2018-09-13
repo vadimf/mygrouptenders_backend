@@ -1,7 +1,7 @@
-import * as mongoose from "mongoose";
-import { uuidv4 } from "../../utilities/UUID";
-import { AuthenticationTokenSchema, IAuthenticationTokenDocument } from "./authentication-token";
-import { IPassword, IPasswordDocument, Password, PasswordSchema } from "./password";
+import * as mongoose from 'mongoose';
+import { uuidv4 } from '../../utilities/UUID';
+import { AuthenticationTokenSchema, IAuthenticationTokenDocument } from './authentication-token';
+import { IPassword, IPasswordDocument, Password, PasswordSchema } from './password';
 
 export interface IAdministratorDocument extends mongoose.Document {
     firstName: string;
@@ -34,7 +34,7 @@ export const AdministratorSchema = new mongoose.Schema(
     },
 );
 
-AdministratorSchema.pre("save", function(next) {
+AdministratorSchema.pre<IAdministratorDocument>('save', function(next) {
     if ( this.email ) {
         this.email = this.email.toLowerCase();
     }
@@ -43,7 +43,7 @@ AdministratorSchema.pre("save", function(next) {
 });
 
 // User methods
-AdministratorSchema.method("getPasswordObject", function(password: string) {
+AdministratorSchema.method('getPasswordObject', function(password: string) {
     for ( const passwordObject of this.passwords ) {
         if ( passwordObject.compare(password) ) {
             return passwordObject;
@@ -52,7 +52,7 @@ AdministratorSchema.method("getPasswordObject", function(password: string) {
 
     return null;
 });
-AdministratorSchema.method("changePassword", function(newPassword: string) {
+AdministratorSchema.method('changePassword', function(newPassword: string) {
     if ( ! this.passwords ) {
         this.passwords = [];
     }
@@ -64,7 +64,7 @@ AdministratorSchema.method("changePassword", function(newPassword: string) {
 
     this.passwords = this.passwords.concat([Password.createPassword(newPassword)]);
 });
-AdministratorSchema.method("createAuthToken", function() {
+AdministratorSchema.method('createAuthToken', function() {
     if ( ! this.tokens ) {
         this.tokens = [];
     }
@@ -77,12 +77,12 @@ AdministratorSchema.method("createAuthToken", function() {
 
     return newToken;
 });
-AdministratorSchema.method("getCurrentPassword", function() {
+AdministratorSchema.method('getCurrentPassword', function() {
     return this.passwords.find((obj: {current: boolean}) => {
         return obj.current;
     });
 });
-AdministratorSchema.method("toJSON", function() {
+AdministratorSchema.method('toJSON', function() {
     return {
         id: this._id,
         createdAt: this.createdAt,
@@ -92,7 +92,7 @@ AdministratorSchema.method("toJSON", function() {
     };
 });
 
-AdministratorSchema.static("get", (conditions: any) => Administrator.find(conditions));
-AdministratorSchema.static("getSingle", (conditions: any) => Administrator.findOne(conditions));
+AdministratorSchema.static('get', (conditions: any) => Administrator.find(conditions));
+AdministratorSchema.static('getSingle', (conditions: any) => Administrator.findOne(conditions));
 
-export const Administrator = mongoose.model<IAdministratorDocument, IAdministratorModel>("Administrator", AdministratorSchema, "administrators");
+export const Administrator = mongoose.model<IAdministratorDocument, IAdministratorModel>('Administrator', AdministratorSchema, 'administrators');

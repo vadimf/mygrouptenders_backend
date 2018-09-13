@@ -1,19 +1,18 @@
-import * as express from "express";
-import { SystemConfiguration } from "../../../models/system-configuration";
-import { IProfileDocument } from "../../../models/user/profile";
-
-import { AsyncMiddleware } from "../../../server";
+import * as express from 'express';
+import { SystemConfiguration } from '../../../models/system-configuration';
+import { IProfileDocument } from '../../../models/user/profile';
+import asyncMiddleware from '../../../utilities/async-middleware';
 
 export function updateUserProfileByRequest() {
-    return AsyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         req.checkBody({
-            "user.profile.firstName": {
+            'user.profile.firstName': {
                 byValidationObject: {
                     options: SystemConfiguration.validations.firstName,
                     errorMessage: "Last name doesn't match validation requirements",
                 },
             },
-            "user.profile.lastName": {
+            'user.profile.lastName': {
                 byValidationObject: {
                     options: SystemConfiguration.validations.lastName,
                     errorMessage: "First name doesn't match validation requirements",
@@ -25,8 +24,8 @@ export function updateUserProfileByRequest() {
             req.user.profile = {} as IProfileDocument;
         }
 
-        req.user.profile.firstName = String(req.body.user.profile.firstName || "");
-        req.user.profile.lastName = String(req.body.user.profile.lastName || "");
+        req.user.profile.firstName = String(req.body.user.profile.firstName || '');
+        req.user.profile.lastName = String(req.body.user.profile.lastName || '');
 
         next();
     });

@@ -1,4 +1,4 @@
-import * as mongoose from "mongoose";
+import * as mongoose from 'mongoose';
 
 export const extendSchema = (schema: mongoose.Schema, obj: any, options?: any) => {
     const newSchema = new mongoose.Schema(

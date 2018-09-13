@@ -1,5 +1,5 @@
-import * as admin from "firebase-admin";
-import * as fs from "fs";
+import * as admin from 'firebase-admin';
+import * as fs from 'fs';
 
 let initialized = false;
 
@@ -11,7 +11,7 @@ let initialized = false;
 export function firebaseClient() {
     if ( ! initialized ) {
         // TODO: Change to .json file
-        const firebasePrivateCertificate = fs.readFileSync(__dirname + "/../../firebase.pem", "utf8");
+        const firebasePrivateCertificate = fs.readFileSync(__dirname + '/../../firebase.pem', 'utf8');
 
         const options = {
             credential: admin.credential.cert({

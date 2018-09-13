@@ -1,128 +1,128 @@
-import * as express from "express";
-import { ILanguageDocument, Language } from "../../../models/language";
-import { ITranslatableStringDocument, ITranslationDocument } from "../../../models/translatable-string";
-import { AsyncMiddleware } from "../../../server";
+import * as express from 'express';
+import { ILanguageDocument, Language } from '../../../models/language';
+import { ITranslatableStringDocument, ITranslationDocument } from '../../../models/translatable-string';
+import asyncMiddleware from '../../../utilities/async-middleware';
 
 const router = express.Router();
 
 /**
  * Output the available languages for the application
  */
-router.get("/", AsyncMiddleware(async (req: express.Request, res: express.Response) => {
+router.get('/', asyncMiddleware(async (req: express.Request, res: express.Response) => {
     let languages = await Language.find({})
-        .sort("displayOrder");
+        .sort('displayOrder');
 
     if ( ! languages.length ) {
         languages = [
             new Language({
                 title: {
-                    original: "Hebrew",
+                    original: 'Hebrew',
                     translations: [
                         {
-                            languageCode: "he",
-                            text: "עברית",
+                            languageCode: 'he',
+                            text: 'עברית',
                         } as ITranslationDocument,
                     ],
                 } as ITranslatableStringDocument,
-                code: "he",
+                code: 'he',
                 displayOrder: 1,
             }),
             new Language({
                 title: {
-                    original: "English",
+                    original: 'English',
                     translations: [
                         {
-                            languageCode: "he",
-                            text: "אנגלית",
+                            languageCode: 'he',
+                            text: 'אנגלית',
                         } as ITranslationDocument,
                     ],
                 } as ITranslatableStringDocument,
-                code: "en",
+                code: 'en',
                 displayOrder: 2,
             }),
             new Language({
                 title: {
-                    original: "Russian",
+                    original: 'Russian',
                     translations: [
                         {
-                            languageCode: "ru",
-                            text: "Русский",
+                            languageCode: 'ru',
+                            text: 'Русский',
                         } as ITranslationDocument,
                         {
-                            languageCode: "he",
-                            text: "רוסית",
+                            languageCode: 'he',
+                            text: 'רוסית',
                         } as ITranslationDocument,
                     ],
                 } as ITranslatableStringDocument,
-                code: "ru",
+                code: 'ru',
                 displayOrder: 3,
             }),
             new Language({
                 title: {
-                    original: "Arabic",
+                    original: 'Arabic',
                     translations: [
                         {
-                            languageCode: "ar",
-                            text: "العربية",
+                            languageCode: 'ar',
+                            text: 'العربية',
                         } as ITranslationDocument,
                         {
-                            languageCode: "he",
-                            text: "ערבית",
+                            languageCode: 'he',
+                            text: 'ערבית',
                         } as ITranslationDocument,
                     ],
                 } as ITranslatableStringDocument,
-                code: "ar",
+                code: 'ar',
                 displayOrder: 4,
             }),
             new Language({
                 title: {
-                    original: "Amharic",
+                    original: 'Amharic',
                     translations: [
                         {
-                            languageCode: "am",
-                            text: "አማርኛ",
+                            languageCode: 'am',
+                            text: 'አማርኛ',
                         } as ITranslationDocument,
                         {
-                            languageCode: "he",
-                            text: "אמהרית",
+                            languageCode: 'he',
+                            text: 'אמהרית',
                         } as ITranslationDocument,
                     ],
                 } as ITranslatableStringDocument,
-                code: "am",
+                code: 'am',
                 displayOrder: 5,
             }),
             new Language({
                 title: {
-                    original: "French",
+                    original: 'French',
                     translations: [
                         {
-                            languageCode: "fr",
-                            text: "Français",
+                            languageCode: 'fr',
+                            text: 'Français',
                         } as ITranslationDocument,
                         {
-                            languageCode: "he",
-                            text: "עברית",
+                            languageCode: 'he',
+                            text: 'עברית',
                         } as ITranslationDocument,
                     ],
                 } as ITranslatableStringDocument,
-                code: "fr",
+                code: 'fr',
                 displayOrder: 6,
             }),
             new Language({
                 title: {
-                    original: "Spanish",
+                    original: 'Spanish',
                     translations: [
                         {
-                            languageCode: "es",
-                            text: "Español",
+                            languageCode: 'es',
+                            text: 'Español',
                         } as ITranslationDocument,
                         {
-                            languageCode: "he",
-                            text: "עברית",
+                            languageCode: 'he',
+                            text: 'עברית',
                         } as ITranslationDocument,
                     ],
                 } as ITranslatableStringDocument,
-                code: "es",
+                code: 'es',
                 displayOrder: 7,
             }),
         ];

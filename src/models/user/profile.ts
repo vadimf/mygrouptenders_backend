@@ -1,7 +1,7 @@
-import * as dateformat from "dateformat";
-import * as i18n from "i18n";
-import * as mongoose from "mongoose";
-import { FileSchema, IFileDocument } from "../file";
+import * as i18n from 'i18n';
+import * as mongoose from 'mongoose';
+
+import { FileSchema, IFileDocument } from '../file';
 
 export interface IProfileDocument extends mongoose.Document {
     firstName: string;
@@ -20,7 +20,7 @@ export const ProfileSchema = new mongoose.Schema(
         picture:            { type: FileSchema },
     },
 );
-ProfileSchema.method("toJSON", function() {
+ProfileSchema.method('toJSON', function() {
     return {
         firstName:          this.firstName,
         lastName:           this.lastName,
@@ -28,23 +28,23 @@ ProfileSchema.method("toJSON", function() {
     };
 });
 
-ProfileSchema.pre("save", function(next) {
+ProfileSchema.pre<IProfileDocument>('save', function(next) {
     if ( ! this.firstName || ! this.lastName ) {
         return next();
     }
 
     this.fullNames = [
-        (this.firstName + " " + this.lastName).toLowerCase(),
-        (this.firstName + ", " + this.lastName).toLowerCase(),
-        (this.lastName + " " + this.firstName).toLowerCase(),
-        (this.lastName + ", " + this.firstName).toLowerCase(),
+        (this.firstName + ' ' + this.lastName).toLowerCase(),
+        (this.firstName + ', ' + this.lastName).toLowerCase(),
+        (this.lastName + ' ' + this.firstName).toLowerCase(),
+        (this.lastName + ', ' + this.firstName).toLowerCase(),
     ];
 
     next();
 });
 
-ProfileSchema.method("getFullName", function() {
-    return i18n.__("formatting.full_name", {
+ProfileSchema.method('getFullName', function() {
+    return i18n.__('formatting.full_name', {
         firstName: this.firstName,
         lastName: this.lastName,
     });

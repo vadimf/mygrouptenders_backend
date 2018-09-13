@@ -1,9 +1,9 @@
-import * as FileType from "file-type";
-import { Bucket } from "google-cloud__storage";
-import * as request from "request";
-import * as Stream from "stream";
-import { firebaseClient } from "./firebase-client";
-import { uuidv4 } from "./UUID";
+import * as FileType from 'file-type';
+import { Bucket } from 'google-cloud__storage';
+import * as request from 'request';
+import * as Stream from 'stream';
+import { firebaseClient } from './firebase-client';
+import { uuidv4 } from './UUID';
 
 /**
  * Storage manager
@@ -36,7 +36,7 @@ export class StorageManager {
      * Get the bucket full name
      */
     private static _getBucketName() {
-        return process.env.FIREBASE_PROJECT_ID + ".appspot.com";
+        return process.env.FIREBASE_PROJECT_ID + '.appspot.com';
     }
 
     /**
@@ -83,7 +83,7 @@ export class StorageManager {
             request({url: url, encoding: null}, (error, response, body) => {
                 if ( error ) {
                     reject({
-                        uploadingError: "Could not retrieve buffer from url: " + url,
+                        uploadingError: 'Could not retrieve buffer from url: ' + url,
                     });
                 }
                 else {
@@ -112,7 +112,7 @@ export class StorageManager {
 
             if ( ! buffer ) {
                 return reject({
-                    uploadingError: "No buffer to upload",
+                    uploadingError: 'No buffer to upload',
                 });
             }
 
@@ -120,18 +120,18 @@ export class StorageManager {
 
             if ( options.allowedMimeTypes && ! fileType ) {
                 return reject({
-                    uploadingError: "Unable to retrieve mime-type from file (expected: " + options.allowedMimeTypes.join(", ") + ")",
+                    uploadingError: 'Unable to retrieve mime-type from file (expected: ' + options.allowedMimeTypes.join(', ') + ')',
                 });
             }
 
             if ( options.allowedMimeTypes && options.allowedMimeTypes.length && ! options.allowedMimeTypes.hasItem(fileType.mime.toString()) ) {
                 return reject({
-                    uploadingError: "File type '" + fileType.mime.toString() + "' isn't allowed. (Allowed types" + options.allowedMimeTypes.join(", ") + ")",
+                    uploadingError: "File type '" + fileType.mime.toString() + "' isn't allowed. (Allowed types" + options.allowedMimeTypes.join(', ') + ')',
                 });
             }
 
-            const fileName = that._fileName + "." + fileType.ext;
-            const fullFileName = (this._directory ? this._directory + "/" : "") + fileName;
+            const fileName = that._fileName + '.' + fileType.ext;
+            const fullFileName = (this._directory ? this._directory + '/' : '') + fileName;
             const bucketFile = StorageManager.getBucketFile(fullFileName);
 
             const stream = StorageManager.getWritableStream(
@@ -140,16 +140,16 @@ export class StorageManager {
             );
 
             stream
-                .on("error", (e: any) => {
+                .on('error', (e: any) => {
                     return reject({
-                        uploadingError: "Unable to upload to firebase storage",
+                        uploadingError: 'Unable to upload to firebase storage',
                         error: e,
                     });
                 })
-                .on("finish", async () => {
+                .on('finish', async () => {
                     await bucketFile.makePublic();
                     const url = StorageManager.getPublicUrl(fullFileName);
-                    console.log("Finished uploading file to:", url);
+                    console.log('Finished uploading file to:', url);
                     return resolve({
                         url,
                         mime: fileType.mime,
@@ -199,8 +199,8 @@ export class StorageManager {
                 that.fileName(uuidv4());
             }
 
-            const fileName = that._fileName + "." + options.ext;
-            const fullFileName = (this._directory ? this._directory + "/" : "") + fileName;
+            const fileName = that._fileName + '.' + options.ext;
+            const fullFileName = (this._directory ? this._directory + '/' : '') + fileName;
             const bucketFile = StorageManager.bucket.file(fullFileName);
             const bucketStream = bucketFile
                 .createWriteStream({
@@ -210,15 +210,15 @@ export class StorageManager {
                 });
 
             bucketStream
-                .on("error", () => {
+                .on('error', () => {
                     return reject({
-                        uploadingError: "Unable to upload to firebase storage",
+                        uploadingError: 'Unable to upload to firebase storage',
                     });
                 })
-                .on("finish", async () => {
+                .on('finish', async () => {
                     await bucketFile.makePublic();
                     const url = StorageManager.getPublicUrl(fullFileName);
-                    console.log("Finished uploading file to:", url);
+                    console.log('Finished uploading file to:', url);
                     return resolve({
                         url,
                         mime: options.mime,
@@ -236,7 +236,7 @@ export class StorageManager {
      * @returns {string}
      */
     public static getPublicUrl(fileName: string): string {
-        return "https://storage.googleapis.com/" + StorageManager._getBucketName() + "/" + fileName;
+        return 'https://storage.googleapis.com/' + StorageManager._getBucketName() + '/' + fileName;
     }
 
     /**
@@ -246,7 +246,7 @@ export class StorageManager {
      * @returns {string}
      */
     public static getFilenameFromPublicUrl(publicUrl: string): string {
-        return publicUrl.replace("https://storage.googleapis.com/" + StorageManager._getBucketName() + "/", "");
+        return publicUrl.replace('https://storage.googleapis.com/' + StorageManager._getBucketName() + '/', '');
     }
 
     /**

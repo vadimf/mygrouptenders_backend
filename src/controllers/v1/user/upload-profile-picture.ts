@@ -1,8 +1,8 @@
-import * as request from "request";
-import sharp = require("sharp");
-import { MimeType } from "../../../utilities/mime-type";
-import { StorageManager } from "../../../utilities/storage-manager";
-import { Utilities } from "../../../utilities/utilities";
+import * as request from 'request';
+import sharp = require('sharp');
+import { MimeType } from '../../../utilities/mime-type';
+import { StorageManager } from '../../../utilities/storage-manager';
+import { Utilities } from '../../../utilities/utilities';
 
 export class UploadProfilePicture {
     private _buffer: Buffer;
@@ -11,7 +11,7 @@ export class UploadProfilePicture {
     constructor(private _userId: string) {}
 
     public base64(base64: string) {
-        this._buffer = new Buffer(base64, "base64");
+        this._buffer = new Buffer(base64, 'base64');
         return this;
     }
 
@@ -45,12 +45,12 @@ export class UploadProfilePicture {
         }
 
         if ( ! this._buffer ) {
-            throw new Error("No buffer to upload image");
+            throw new Error('No buffer to upload image');
         }
 
         const storageManager = new StorageManager();
         const fileName = Utilities.randomString(24);
-        const thumbnailFileName = fileName + ".thumb";
+        const thumbnailFileName = fileName + '.thumb';
 
         const thumbnailCreationBuffer = await sharp(this._buffer)
             .resize(200, 200)

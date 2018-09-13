@@ -1,5 +1,5 @@
-import * as bcrypt from "bcrypt-nodejs";
-import * as mongoose from "mongoose";
+import * as bcrypt from 'bcrypt-nodejs';
+import * as mongoose from 'mongoose';
 
 export interface IPasswordDocument extends mongoose.Document {
     hash: string;
@@ -26,12 +26,12 @@ export const PasswordSchema = new mongoose.Schema(
     },
 );
 
-PasswordSchema.method("compare", function(candidatePassword: string) {
-    candidatePassword = candidatePassword.replace(/[-!$%^&*()_+@\s|~=`\\#{}\[\]:";'<>?,.\/]/, "");
+PasswordSchema.method('compare', function(candidatePassword: string) {
+    candidatePassword = candidatePassword.replace(/[-!$%^&*()_+@\s|~=`\\#{}\[\]:";'<>?,.\/]/, '');
     return bcrypt.compareSync(candidatePassword, this.hash);
 });
-PasswordSchema.method("setPassword", function(newPassword: string) {
-    newPassword = newPassword.replace(/[-!$%^&*()_+@\s|~=`\\#{}\[\]:";'<>?,.\/]/, "");
+PasswordSchema.method('setPassword', function(newPassword: string) {
+    newPassword = newPassword.replace(/[-!$%^&*()_+@\s|~=`\\#{}\[\]:";'<>?,.\/]/, '');
 
     const salt = bcrypt.genSaltSync(10);
     this.hash = bcrypt.hashSync(
@@ -39,7 +39,7 @@ PasswordSchema.method("setPassword", function(newPassword: string) {
         salt,
     );
 });
-PasswordSchema.static("createPassword",  function(newPassword: string): Promise<IPassword> {
+PasswordSchema.static('createPassword',  function(newPassword: string): Promise<IPassword> {
     const passwordObject = new this({
         current: true,
     });
@@ -48,4 +48,4 @@ PasswordSchema.static("createPassword",  function(newPassword: string): Promise<
 
     return passwordObject;
 });
-export const Password = mongoose.model<IPassword, IPasswordModel>("Password", PasswordSchema);
+export const Password = mongoose.model<IPassword, IPasswordModel>('Password', PasswordSchema);

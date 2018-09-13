@@ -1,5 +1,5 @@
-import * as NodeGeocoder from "node-geocoder";
-import { Entry } from "node-geocoder";
+import * as NodeGeocoder from 'node-geocoder';
+import { Entry } from 'node-geocoder';
 
 /**
  * Geocoding functions
@@ -15,8 +15,8 @@ export class Geocoding {
     private static get geocoder(): NodeGeocoder.Geocoder {
         if ( ! this._geocoder ) {
             this._geocoder = NodeGeocoder({
-                provider:           "google",
-                httpAdapter:        "https",
+                provider:           'google',
+                httpAdapter:        'https',
                 apiKey:             process.env.GOOGLE_API_KEY,
             });
         }
@@ -30,11 +30,11 @@ export class Geocoding {
             geoLocation = await this.geocoder.geocode(address);
         }
         catch (e) {
-            console.log("Geocode failed");
+            console.log('Geocode failed');
         }
 
         if ( ! geoLocation || ! geoLocation[0] || ! (geoLocation[0].latitude || geoLocation[0].longitude) ) {
-            throw new Error("Unable to retrieve coordinates for: " + address);
+            throw new Error('Unable to retrieve coordinates for: ' + address);
         }
 
         return [geoLocation[0].latitude, geoLocation[0].longitude];

@@ -1,21 +1,21 @@
-import * as express from "express";
-import { isUserAuthenticated } from "../../../config/passport";
-import { AppError } from "../../../models/app-error";
-import { PhoneConfirmationRequest } from "../../../models/phone-confirmation-request";
-import { SystemConfiguration } from "../../../models/system-configuration";
-import { IAuthenticationTokenDocument } from "../../../models/user/authentication-token";
-import { IPhoneNumberDocument, PhoneNumber } from "../../../models/user/phone-number";
-import { User } from "../../../models/user/user";
-import { AsyncMiddleware } from "../../../server";
-import { Utilities } from "../../../utilities/utilities";
+import * as express from 'express';
+import { isUserAuthenticated } from '../../../config/passport';
+import { AppError } from '../../../models/app-error';
+import { PhoneConfirmationRequest } from '../../../models/phone-confirmation-request';
+import { SystemConfiguration } from '../../../models/system-configuration';
+import { IAuthenticationTokenDocument } from '../../../models/user/authentication-token';
+import { IPhoneNumberDocument, PhoneNumber } from '../../../models/user/phone-number';
+import { User } from '../../../models/user/user';
+import asyncMiddleware from '../../../utilities/async-middleware';
+import { Utilities } from '../../../utilities/utilities';
 
 const router = express.Router();
 
 router
     .post(
-        "/sign-in",
+        '/sign-in',
         getPhoneNumberFromRequest(),
-        AsyncMiddleware(async (req: express.Request, res: express.Response) => {
+        asyncMiddleware(async (req: express.Request, res: express.Response) => {
             req.checkBody({
                 password: {
                     byValidationObject: {
@@ -27,12 +27,12 @@ router
 
             await req.validateRequest();
 
-            const password: string = String(req.body.password || "");
+            const password: string = String(req.body.password || '');
             const phoneNumber: IPhoneNumberDocument = (req as any).phone;
 
             const user = await User.getSingle({
-                "phone.prefix": phoneNumber.prefix,
-                "phone.number": phoneNumber.number,
+                'phone.prefix': phoneNumber.prefix,
+                'phone.number': phoneNumber.number,
             });
 
             if ( ! user ) {
@@ -60,21 +60,21 @@ router
     )
 
     .post(
-        "/send-sms",
+        '/send-sms',
         getPhoneNumberFromRequest(),
-        AsyncMiddleware(async (req: express.Request, res: express.Response) => {
+        asyncMiddleware(async (req: express.Request, res: express.Response) => {
             const phoneNumber: IPhoneNumberDocument = (req as any).phone;
 
             const user = await User.findOne({
-                "phone.prefix": phoneNumber.prefix,
-                "phone.number": phoneNumber.number,
+                'phone.prefix': phoneNumber.prefix,
+                'phone.number': phoneNumber.number,
             });
 
             if ( user ) {
                 throw AppError.ObjectExist;
             }
 
-            const code = process.env.ENV === "DEV" ? "1992" : Utilities.randomString(
+            const code = process.env.ENV === 'DEV' ? '1992' : Utilities.randomString(
                 SystemConfiguration.validations.confirmationCode.minLength,
                 false,
                 false,
@@ -96,7 +96,7 @@ router
     )
 
     .post(
-        "/check-code-valid",
+        '/check-code-valid',
         getPhoneNumberFromRequest(),
         checkPhoneNumberConfirmationRequestBeforeSignUp(),
         (req: express.Request, res: express.Response) => {
@@ -105,10 +105,10 @@ router
     )
 
     .post(
-        "/sign-up",
+        '/sign-up',
         getPhoneNumberFromRequest(),
         checkPhoneNumberConfirmationRequestBeforeSignUp(),
-        AsyncMiddleware(async (req: express.Request, res: express.Response) => {
+        asyncMiddleware(async (req: express.Request, res: express.Response) => {
             req.checkBody({
                 password: {
                     byValidationObject: {
@@ -120,7 +120,7 @@ router
 
             await req.validateRequest();
 
-            const password: string = String(req.body.password || "");
+            const password: string = String(req.body.password || '');
             const phoneNumber: IPhoneNumberDocument = (req as any).phone;
 
             const user = new User({
@@ -134,8 +134,8 @@ router
 
             PhoneConfirmationRequest
                 .deleteMany({
-                    "phone.prefix": phoneNumber.prefix,
-                    "phone.number": phoneNumber.number,
+                    'phone.prefix': phoneNumber.prefix,
+                    'phone.number': phoneNumber.number,
                 })
                 .then(() => {})
                 .catch(() => {});
@@ -148,9 +148,9 @@ router
     )
 
     .delete(
-        "/",
+        '/',
         isUserAuthenticated(),
-        AsyncMiddleware(async (req: express.Request, res: express.Response) => {
+        asyncMiddleware(async (req: express.Request, res: express.Response) => {
             const currentAuthenticationToken = req.authToken as IAuthenticationTokenDocument;
 
             req.user.tokens = req.user.tokens.filter((item: IAuthenticationTokenDocument) => item.authToken !== currentAuthenticationToken.authToken);
@@ -161,9 +161,9 @@ router
     );
 
 export function getPhoneNumberFromRequest() {
-    return AsyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        req.checkBody("phone.prefix",         "Phone number prefix missing").notEmpty();
-        req.checkBody("phone.number",         "Phone number missing").notEmpty();
+    return asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        req.checkBody('phone.prefix',         'Phone number prefix missing').notEmpty();
+        req.checkBody('phone.number',         'Phone number missing').notEmpty();
 
         await req.validateRequest();
 
@@ -177,7 +177,7 @@ export function getPhoneNumberFromRequest() {
 }
 
 function checkPhoneNumberConfirmationRequestBeforeSignUp() {
-    return AsyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    return asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
         req.checkBody({
             code: {
                 byValidationObject: {
@@ -190,11 +190,11 @@ function checkPhoneNumberConfirmationRequestBeforeSignUp() {
         await req.validateRequest();
 
         const phoneNumber: IPhoneNumberDocument = (req as any).phone;
-        const code = String(req.body.code || "");
+        const code = String(req.body.code || '');
 
         const userExists = await User.count({
-            "phone.prefix": phoneNumber.prefix,
-            "phone.number": phoneNumber.number,
+            'phone.prefix': phoneNumber.prefix,
+            'phone.number': phoneNumber.number,
         });
 
         if ( userExists ) {
@@ -202,9 +202,9 @@ function checkPhoneNumberConfirmationRequestBeforeSignUp() {
         }
 
         const phoneConfirmationRequests = await PhoneConfirmationRequest.findOne({
-            "phone.prefix": phoneNumber.prefix,
-            "phone.number": phoneNumber.number,
-            "code": code,
+            'phone.prefix': phoneNumber.prefix,
+            'phone.number': phoneNumber.number,
+            'code': code,
         });
 
         if ( ! phoneConfirmationRequests ) {

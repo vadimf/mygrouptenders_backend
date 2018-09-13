@@ -1,9 +1,9 @@
-import * as express from "express";
-import { AppError } from "../models/app-error";
-import { Administrator } from "../models/user/administrator";
-import { IAuthenticationTokenDocument } from "../models/user/authentication-token";
-import { User } from "../models/user/user";
-import { AsyncMiddleware } from "../server";
+import * as express from 'express';
+import { AppError } from '../models/app-error';
+import { Administrator } from '../models/user/administrator';
+import { IAuthenticationTokenDocument } from '../models/user/authentication-token';
+import { User } from '../models/user/user';
+import asyncMiddleware from '../utilities/async-middleware';
 
 /**
  * Checks if user logged in, and then passes their object into request object. Otherwise - respond with an error.
@@ -11,15 +11,15 @@ import { AsyncMiddleware } from "../server";
  * @returns <Promise<(req: e.Request, res: e.Response, next: e.NextFunction) => void>>
  */
 export function isUserAuthenticated() {
-    return AsyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        let authToken: string = req.header("x-authorization");
+    return asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        let authToken: string = req.header('x-authorization');
 
         if ( ! authToken ) {
             authToken = req.query.token;
         }
 
         if ( authToken ) {
-            req.user = await User.getSingle({"tokens.authToken": authToken});
+            req.user = await User.getSingle({'tokens.authToken': authToken});
 
             if ( req.user ) {
                 if ( req.user.blocked ) {
@@ -47,15 +47,15 @@ export function isUserAuthenticated() {
  * @returns <Promise<(req: e.Request, res: e.Response, next: e.NextFunction) => void>>
  */
 export function isAdministratorAuthenticated() {
-    return AsyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        let authToken: string = req.header("x-authorization");
+    return asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+        let authToken: string = req.header('x-authorization');
 
         if ( ! authToken ) {
             authToken = req.query.token;
         }
 
         if ( authToken ) {
-            req.user = await Administrator.getSingle({"tokens.authToken": authToken});
+            req.user = await Administrator.getSingle({'tokens.authToken': authToken});
 
             if ( req.user ) {
                 if ( req.user.blocked ) {

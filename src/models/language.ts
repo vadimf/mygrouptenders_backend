@@ -1,5 +1,5 @@
-import * as mongoose from "mongoose";
-import { ITranslationDocument, TranslatableStringSchema } from "./translatable-string";
+import * as mongoose from 'mongoose';
+import { ITranslationDocument, TranslatableStringSchema } from './translatable-string';
 
 export interface ILanguageDocument extends mongoose.Document {
     title: ITranslationDocument;
@@ -23,4 +23,4 @@ LanguageSchema.methods.toJSON = function() {
     };
 };
 
-export const Language = mongoose.model<ILanguageDocument>("Language", LanguageSchema, "languages");
+export const Language = mongoose.model<ILanguageDocument>('Language', LanguageSchema, 'languages');

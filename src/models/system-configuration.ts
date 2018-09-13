@@ -1,19 +1,19 @@
-import { Validations } from "../controllers/v1/common/validations";
-import { app } from "../server";
-import { MimeType } from "../utilities/mime-type";
-import { ISystemVariablesDocument } from "./system-variables";
+import { Validations } from '../controllers/v1/common/validations';
+import { app } from '../server';
+import { MimeType } from '../utilities/mime-type';
+import { ISystemVariablesDocument } from './system-variables';
 
 export class SystemConfiguration {
     private static _validations: Validations;
 
     private static get variables(): ISystemVariablesDocument {
-        return app.get("system");
+        return app.get('system');
     }
 
     static get pages() {
         return {
             website:                process.env.WEBSITE_BASE_URL,
-            libraries:              "http://globalbit.co.il/legal/libs/",
+            libraries:              'http://globalbit.co.il/legal/libs/',
         };
     }
 

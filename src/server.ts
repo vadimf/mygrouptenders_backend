@@ -1,28 +1,28 @@
-import bluebird = require("bluebird");
-import * as bodyParser from "body-parser";
-import * as compression from "compression";
-import * as dotenv from "dotenv";
-import errorHandler = require("errorhandler");
-import * as express from "express";
-import expressValidator = require("express-validator");
-import * as helmet from "helmet";
-import * as i18n from "i18n";
-import * as moment from "moment";
-import * as mongoose from "mongoose";
-import * as logger from "morgan";
-import * as nodeCron from "node-cron";
-import * as path from "path";
-import { AppErrorWithData } from "./models/app-error-with-data";
-import { ISystemVariablesDocument, SystemVariables } from "./models/system-variables";
-import { Validation } from "./models/validation";
-import { Utilities } from "./utilities/utilities";
+import bluebird = require('bluebird');
+import * as bodyParser from 'body-parser';
+import * as compression from 'compression';
+import * as dotenv from 'dotenv';
+import errorHandler = require('errorhandler');
+import * as express from 'express';
+import expressValidator = require('express-validator');
+import * as helmet from 'helmet';
+import * as i18n from 'i18n';
+import * as moment from 'moment';
+import * as mongoose from 'mongoose';
+import * as logger from 'morgan';
+import * as path from 'path';
+
+import V1Router from './controllers/v1/v1';
+import { AppError } from './models/app-error';
+import { AppErrorWithData } from './models/app-error-with-data';
+import { ISystemVariablesDocument, SystemVariables } from './models/system-variables';
+import { Validation } from './models/validation';
+import { Utilities } from './utilities/utilities';
 
 // Load environment variables from .env file, where API keys and passwords are configured.
-dotenv.config({ path: "config/.env" });
+dotenv.config({ path: 'config/.env' });
 
 // API keys and Passport configuration.
-import { AppError } from "./models/app-error";
-
 // Create Express server.
 export const app = express();
 
@@ -37,7 +37,7 @@ mongoose.connect(
     },
     (err: any) => {
         if ( err ) {
-            console.log("MongoDB connection error. Please make sure MongoDB is running.", mongoDbUri);
+            console.log('MongoDB connection error. Please make sure MongoDB is running.', mongoDbUri);
             process.exit();
         }
     },
@@ -45,28 +45,28 @@ mongoose.connect(
 (mongoose as any).Promise = bluebird;
 
 // Express configuration.
-app.set("port", process.env.PORT || 3000);
-app.set("env", process.env.ENV || "development");
-app.set("view engine", "pug");
-app.set("name", process.env.APP_NAME || "Project");
-app.set("root dir", __dirname + "/../");
+app.set('port', process.env.PORT || 3000);
+app.set('env', process.env.ENV || 'development');
+app.set('view engine', 'pug');
+app.set('name', process.env.APP_NAME || 'Project');
+app.set('root dir', __dirname + '/../');
 app.use(helmet());
 app.use(compression({
     threshold: 1,
 }));
-app.use(logger("dev"));
-app.use(bodyParser.json({limit: "50mb"}));
+app.use(logger('dev'));
+app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({
     extended: false,
 }));
 
 // Error Handler
-if ( process.env.ENV === "DEV" ) {
+if ( process.env.ENV === 'DEV' ) {
     app.use(errorHandler());
 }
 
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if ( req.method === "POST" && req.body._method ) {
+    if ( req.method === 'POST' && req.body._method ) {
         req.method = req.body._method;
     }
 
@@ -92,9 +92,9 @@ app.use(expressValidator({
             }
             const extension = (path.extname(file.originalname)).toLowerCase();
             switch (extension) {
-                case ".jpg":
-                case ".jpeg":
-                case ".png":
+                case '.jpg':
+                case '.jpeg':
+                case '.png':
                     return true;
                 default:
                     return false;
@@ -109,31 +109,31 @@ app.use((req, res, next) => {
 });
 
 i18n.configure({
-    locales: ["en", "he"],
-    directory: __dirname + "/../locales",
+    locales: ['en', 'he'],
+    directory: __dirname + '/../locales',
     objectNotation: true,
 });
 app.use(i18n.init);
 
 app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, PATCH, DELETE");
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, X-Authorization, X-Language, X-Mobile-Device");
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, X-Authorization, X-Language, X-Mobile-Device');
     next();
 });
 
 app.use((req, res, next) => {
-    let language: string = req.header("x-language");
+    let language: string = req.header('x-language');
 
     if ( ! language ) {
         language = req.query.language;
 
         if ( ! language ) {
-            language = "he";
+            language = 'he';
         }
     }
 
-    app.set("language", language);
+    app.set('language', language);
 
     req.setLocale(language);
     i18n.setLocale(language);
@@ -143,21 +143,21 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use(express.static(path.join(__dirname, "public"), { maxAge: 31557600000 }));
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
 app.use((req, res, next) => {
-    const contentType = req.header("content-type");
+    const contentType = req.header('content-type');
     req.jsonResponseRequested = contentType &&
-        ( contentType.indexOf("application/json") >= 0 || contentType.indexOf("multipart/form-data") >= 0 );
+        ( contentType.indexOf('application/json') >= 0 || contentType.indexOf('multipart/form-data') >= 0 );
 
     res.error = (e: any, meta?: any) => {
-        if ( req.method === "OPTIONS" ) {
+        if ( req.method === 'OPTIONS' ) {
             return res.response();
         }
 
         const jsonResponse = req.jsonResponseRequested;
 
         let error: AppError;
-        let message: string = "";
+        let message: string = '';
 
         if (e instanceof AppError) {
             error = e;
@@ -171,14 +171,14 @@ app.use((req, res, next) => {
         else {
             error = AppError.ErrorPerformingAction;
 
-            message = e.message ? e.message : "General error";
+            message = e.message ? e.message : 'General error';
 
             if ( ! meta ) {
                 meta = e;
             }
         }
 
-        console.log("System exception", {
+        console.log('System exception', {
             error: e,
             query: req.query,
             params: req.params,
@@ -196,9 +196,9 @@ app.use((req, res, next) => {
             });
         }
         else {
-            return res.render("fatal", {
+            return res.render('fatal', {
                 brand: process.env.APP_NAME,
-                title: "Error",
+                title: 'Error',
                 message,
             });
         }
@@ -222,23 +222,15 @@ app.use((req, res, next) => {
     };
 
     req.mobileDevice = (): boolean => {
-        return req.header("x-mobile-device") === "1";
+        return req.header('x-mobile-device') === '1';
     };
 
     next();
 });
 
-export const AsyncMiddleware = (fn: (req: any, res: any, next: any) => Promise<any>) =>
-    (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        Promise.resolve(fn(req, res, next))
-            .catch(next);
-    };
-
 // Controllers (route handlers)
-import { default as V1Router } from "./controllers/v1/v1";
-
 // Primary app routes.
-app.use("/v1", V1Router);
+app.use('/v1', V1Router);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
     if ( err ) {
@@ -251,9 +243,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 function doNothing(a: any) { a.toString(); }
 
 // Start Express server.
-app.listen(app.get("port"), () => {
-    console.log(("App '%s' is running at http://localhost:%d in %s mode"), app.get("name"), app.get("port"), app.get("env"));
-    console.log("Press CTRL-C to stop\n");
+app.listen(app.get('port'), () => {
+    console.log(("App '%s' is running at http://localhost:%d in %s mode"), app.get('name'), app.get('port'), app.get('env'));
+    console.log('Press CTRL-C to stop\n');
 
     SystemVariables
         .findOne()
@@ -261,20 +253,19 @@ app.listen(app.get("port"), () => {
             if ( ! variables ) {
                 variables = new SystemVariables({
                     contactInformation: {
-                        info: "info@globalbit.co.il",
-                        support: "support@globalbit.co.il",
+                        info: 'info@globalbit.co.il',
+                        support: 'support@globalbit.co.il',
                     },
                 } as ISystemVariablesDocument);
 
                 await variables.save();
             }
 
-            app.set("system", variables);
+            app.set('system', variables);
 
-            console.log("System configuration initiated");
+            console.log('System configuration initiated');
         })
         .catch(() => {});
-
 
     // Cron tasks:
 

@@ -1,4 +1,4 @@
-import * as mongoose from "mongoose";
+import * as mongoose from 'mongoose';
 
 export interface IFileDocument extends mongoose.Document {
     url: string;
@@ -17,9 +17,9 @@ export const FileSchema = new mongoose.Schema(
     },
 );
 
-FileSchema.method("toJSON", function() {
+FileSchema.method('toJSON', function() {
     return {
-        url: this.url || "",
+        url: this.url || '',
         thumbnail: this.thumbnail || null,
         mime: this.mime || null,
     };
