@@ -12,13 +12,12 @@ export class SystemConfiguration {
 
     static get pages() {
         return {
-            website:                process.env.WEBSITE_BASE_URL,
-            libraries:              'http://globalbit.co.il/legal/libs/',
+            website: process.env.WEBSITE_BASE_URL
         };
     }
 
     static get validations() {
-        if ( ! this._validations ) {
+        if (!this._validations) {
             this._validations = new Validations();
         }
 
@@ -40,10 +39,10 @@ export class SystemConfiguration {
 
     public static toJson() {
         return {
-            pages:                  SystemConfiguration.pages,
-            validations:            SystemConfiguration.validations,
-            formats:                SystemConfiguration.formats,
-            contactInformation:     SystemConfiguration.contactInformation,
+            pages: SystemConfiguration.pages,
+            validations: SystemConfiguration.validations,
+            formats: SystemConfiguration.formats,
+            contactInformation: SystemConfiguration.contactInformation,
         };
     }
 }

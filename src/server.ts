@@ -4,7 +4,7 @@ import * as compression from 'compression';
 import * as dotenv from 'dotenv';
 import errorHandler = require('errorhandler');
 import * as express from 'express';
-import expressValidator = require('express-validator');
+import { validationResult } from 'express-validator/check';
 import * as helmet from 'helmet';
 import * as i18n from 'i18n';
 import * as moment from 'moment';
@@ -16,8 +16,6 @@ import V1Router from './controllers/v1/v1';
 import { AppError } from './models/app-error';
 import { AppErrorWithData } from './models/app-error-with-data';
 import { ISystemVariablesDocument, SystemVariables } from './models/system-variables';
-import { Validation } from './models/validation';
-import { Utilities } from './utilities/utilities';
 
 // Load environment variables from .env file, where API keys and passwords are configured.
 dotenv.config({ path: 'config/.env' });
@@ -36,7 +34,7 @@ mongoose.connect(
         promiseLibrary: bluebird,
     },
     (err: any) => {
-        if ( err ) {
+        if (err) {
             console.log('MongoDB connection error. Please make sure MongoDB is running.', mongoDbUri);
             process.exit();
         }
@@ -55,53 +53,52 @@ app.use(compression({
     threshold: 1,
 }));
 app.use(logger('dev'));
-app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({
     extended: false,
 }));
 
 // Error Handler
-if ( process.env.ENV === 'DEV' ) {
+if (process.env.ENV === 'DEV') {
     app.use(errorHandler());
 }
 
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if ( req.method === 'POST' && req.body._method ) {
+    if (req.method === 'POST' && req.body._method) {
         req.method = req.body._method;
     }
 
     next();
 });
 
-app.use(expressValidator({
-    customValidators: {
-        inEnum: (input: string|number, options: any) => input in options,
-        isIsraeliIdNumber: (input: string) => input && Utilities.isIsraeliIdNumberValid(input),
-        between: (input: number, options: {min: number, max?: number}) => Number(input).between(options.min, options.max),
-        isArrayLength: (input: any[], options: {min: number, max?: number}) => {
-            const length = input ? input.length : 0;
-            return length.between(
-                options.min || 0,
-                options.max || null,
-            );
-        },
-        byValidationObject: (input: string, validation: Validation) => input && validation.isValid(input),
-        isImage: (value, file: {originalname: string}) => {
-            if ( ! file || ! file.originalname ) {
-                return false;
-            }
-            const extension = (path.extname(file.originalname)).toLowerCase();
-            switch (extension) {
-                case '.jpg':
-                case '.jpeg':
-                case '.png':
-                    return true;
-                default:
-                    return false;
-            }
-        },
-    },
-}));
+// app.use(expressValidator({
+//     customValidators: {
+//         inEnum: (input: string | number, options: any) => input in options,
+//         isIsraeliIdNumber: (input: string) => input && Utilities.isIsraeliIdNumberValid(input),
+//         between: (input: number, options: { min: number, max?: number }) => Number(input).between(options.min, options.max),
+//         isArrayLength: (input: any[], options: { min: number, max?: number }) => {
+//             const length = input ? input.length : 0;
+//             return length.between(
+//                 options.min || 0,
+//                 options.max || null,
+//             );
+//         },
+//         isImage: (value, file: { originalname: string }) => {
+//             if (!file || !file.originalname) {
+//                 return false;
+//             }
+//             const extension = (path.extname(file.originalname)).toLowerCase();
+//             switch (extension) {
+//                 case '.jpg':
+//                 case '.jpeg':
+//                 case '.png':
+//                     return true;
+//                 default:
+//                     return false;
+//             }
+//         },
+//     },
+// }));
 
 app.use((req, res, next) => {
     res.locals.user = req.user;
@@ -125,10 +122,10 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
     let language: string = req.header('x-language');
 
-    if ( ! language ) {
+    if (!language) {
         language = req.query.language;
 
-        if ( ! language ) {
+        if (!language) {
             language = 'he';
         }
     }
@@ -147,10 +144,10 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }))
 app.use((req, res, next) => {
     const contentType = req.header('content-type');
     req.jsonResponseRequested = contentType &&
-        ( contentType.indexOf('application/json') >= 0 || contentType.indexOf('multipart/form-data') >= 0 );
+        (contentType.indexOf('application/json') >= 0 || contentType.indexOf('multipart/form-data') >= 0);
 
     res.error = (e: any, meta?: any) => {
-        if ( req.method === 'OPTIONS' ) {
+        if (req.method === 'OPTIONS') {
             return res.response();
         }
 
@@ -163,7 +160,7 @@ app.use((req, res, next) => {
             error = e;
             message = e.errorDescription;
         }
-        else if ( e instanceof AppErrorWithData ) {
+        else if (e instanceof AppErrorWithData) {
             error = e.error;
             message = e.error.errorDescription;
             meta = e.data;
@@ -173,7 +170,7 @@ app.use((req, res, next) => {
 
             message = e.message ? e.message : 'General error';
 
-            if ( ! meta ) {
+            if (!meta) {
                 meta = e;
             }
         }
@@ -211,10 +208,10 @@ app.use((req, res, next) => {
         }, data));
     };
 
-    req.validateRequest = async (): Promise<void> => {
-        const validationResults = await req.getValidationResult();
+    req.validateRequest = () => {
+        const validationResults = validationResult(req);
 
-        if ( validationResults.array().length ) {
+        if (validationResults.array().length) {
             throw new AppErrorWithData(AppError.RequestValidation, validationResults.array());
         }
 
@@ -233,7 +230,7 @@ app.use((req, res, next) => {
 app.use('/v1', V1Router);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if ( err ) {
+    if (err) {
         res.error(err);
     }
 
@@ -250,7 +247,7 @@ app.listen(app.get('port'), () => {
     SystemVariables
         .findOne()
         .then(async (variables: ISystemVariablesDocument) => {
-            if ( ! variables ) {
+            if (!variables) {
                 variables = new SystemVariables({
                     contactInformation: {
                         info: 'info@globalbit.co.il',
@@ -265,7 +262,7 @@ app.listen(app.get('port'), () => {
 
             console.log('System configuration initiated');
         })
-        .catch(() => {});
+        .catch(() => { });
 
     // Cron tasks:
 

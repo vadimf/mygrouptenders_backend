@@ -1,5 +1,5 @@
 export class Validation {
-    constructor(public minLength?: number, public maxLength?: number, public regex?: RegExp) {}
+    constructor(public minLength?: number, public maxLength?: number, public regex?: RegExp) { }
 
     public toJSON() {
         return {
@@ -10,8 +10,8 @@ export class Validation {
     }
 
     public isValid(input: string) {
-        return ! ( this.minLength && input.length < this.minLength ) &&
-            ! ( this.maxLength && input.length > this.maxLength ) &&
-            ! ( this.regex && ! this.regex.test(input) );
+        return !(this.minLength && input.length < this.minLength) &&
+            !(this.maxLength && input.length > this.maxLength) &&
+            !(this.regex && !this.regex.test(input));
     }
 }

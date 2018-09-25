@@ -10,14 +10,15 @@ export interface IPhoneNumberDocument extends mongoose.Document {
 export const PhoneNumberSchema = new mongoose.Schema(
     {
         prefix: String,
-        number: String,
+        number: String
     },
 );
 
 PhoneNumberSchema.pre<IPhoneNumberDocument>('save', function(next) {
+
     this.number = this.number.replace(/\D/g, '');
 
-    if ( this.number.startsWith('0') ) {
+    if (this.number.startsWith('0')) {
         this.number = this.number.substr(1);
     }
 
@@ -27,7 +28,7 @@ PhoneNumberSchema.pre<IPhoneNumberDocument>('save', function(next) {
 PhoneNumberSchema.method('toJSON', function() {
     return {
         prefix: this.prefix,
-        number: this.number,
+        number: this.number
     };
 });
 
@@ -36,7 +37,7 @@ PhoneNumberSchema.method('toString', function() {
 });
 
 PhoneNumberSchema.method('toDisplay', function() {
-    return (this.number.charAt(0) === '0' ? '' : '0')  + this.number;
+    return (this.number.charAt(0) === '0' ? '' : '0') + this.number;
 });
 
 export const PhoneNumber = mongoose.model<IPhoneNumberDocument>('PhoneNumber', PhoneNumberSchema);

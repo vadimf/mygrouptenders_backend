@@ -20,15 +20,16 @@ export enum StatusCode {
 }
 
 export class AppError {
-    constructor(public statusCode: number, public errorCode: number, public errorDescription: string) {}
+    constructor(public statusCode: number, public errorCode: number, public errorDescription: string) { }
     public static Success = new AppError(StatusCode.Success, 0, 'Success');
 
-    public static ErrorPerformingAction                     = new AppError(StatusCode.InternalServerError,  100,    'Error performing action');
-    public static ObjectDoesNotExist                        = new AppError(StatusCode.NotFound,             200,    "Object doesn't exist");
-    public static ObjectExist                               = new AppError(StatusCode.Conflict,             202,    'Object already exist');
-    public static NotAuthenticated                          = new AppError(StatusCode.Unauthorized,         300,    'Not authenticated/authorized');
-    public static UserBlocked                               = new AppError(StatusCode.Unauthorized,         301,    'User blocked');
-    public static RequestValidation                         = new AppError(StatusCode.BadRequest,           500,    'Request validation error');
+    public static ErrorPerformingAction = new AppError(StatusCode.InternalServerError, 100, 'Error performing action');
+    public static ObjectDoesNotExist = new AppError(StatusCode.NotFound, 200, "Object doesn't exist");
+    public static ObjectExist = new AppError(StatusCode.Conflict, 202, 'Object already exist');
+    public static NotAuthenticated = new AppError(StatusCode.Unauthorized, 300, 'Not authenticated/authorized');
+    public static UserBlocked = new AppError(StatusCode.Unauthorized, 301, 'User blocked');
+    public static PhoneConfirmationFailed = new AppError(StatusCode.Unauthorized, 302, 'Phone confirmation failed');
+    public static RequestValidation = new AppError(StatusCode.BadRequest, 500, 'Request validation error');
 
-    public static PasswordDoesNotMatch                      = new AppError(StatusCode.Unauthorized,         3001,   "Password doesn't match");
+    public static PasswordDoesNotMatch = new AppError(StatusCode.Unauthorized, 3001, "Password doesn't match");
 }

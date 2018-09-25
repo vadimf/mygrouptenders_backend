@@ -11,6 +11,7 @@
         "member-ordering": false,
         "no-console": false,
         "variable-name": false,
+        "trailing-comma": false,
         "comment-format": [
             true,
             "check-space"

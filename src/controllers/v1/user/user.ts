@@ -35,7 +35,7 @@ router
     .put(
         upload.single('file'),
         asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            (req.checkBody('file', 'Uploaded file is not an image, file name extension must contain one of the following extensions: .jpg, .jpeg, .png') as any).isImage(req.file);
+            // (req.checkBody('file', 'Uploaded file is not an image, file name extension must contain one of the following extensions: .jpg, .jpeg, .png') as any).isImage(req.file);
 
             await req.validateRequest();
 
@@ -71,7 +71,7 @@ router
         upload.single('file'),
         asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
             // (req.checkBody("file", "Uploaded file is not an image, file name extension must contain one of the following extensions: .jpg, .jpeg, .png") as any).isImage(req.file);
-            req.checkBody('file', 'Base64 is invalid').isBase64();
+            // req.checkBody('file', 'Base64 is invalid').isBase64();
 
             await req.validateRequest();
 
@@ -98,7 +98,7 @@ router
     .get(
         '/:id',
         asyncMiddleware(async (req: express.Request, res: express.Response) => {
-            req.checkParams('id', 'ID is not valid').isMongoId();
+            // req.checkParams('id', 'ID is not valid').isMongoId();
 
             await req.validateRequest();
 

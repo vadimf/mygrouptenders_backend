@@ -1,12 +1,15 @@
 import * as express from 'express';
+import { body } from 'express-validator/check';
+
 import { isUserAuthenticated } from '../../../config/passport';
 import { AppError } from '../../../models/app-error';
+import { UserRole } from '../../../models/enums';
 import { PhoneConfirmationRequest } from '../../../models/phone-confirmation-request';
 import { SystemConfiguration } from '../../../models/system-configuration';
 import { IAuthenticationTokenDocument } from '../../../models/user/authentication-token';
-import { IPhoneNumberDocument, PhoneNumber } from '../../../models/user/phone-number';
+import { IPhoneNumberDocument } from '../../../models/user/phone-number';
 import { User } from '../../../models/user/user';
-import asyncMiddleware from '../../../utilities/async-middleware';
+import asyncMiddleware, { getPhoneNumberFromRequest } from '../../../utilities/async-middleware';
 import { Utilities } from '../../../utilities/utilities';
 
 const router = express.Router();
@@ -14,43 +17,35 @@ const router = express.Router();
 router
     .post(
         '/sign-in',
-        getPhoneNumberFromRequest(),
+        ...checkPhoneNumberConfirmationRequest(),
         asyncMiddleware(async (req: express.Request, res: express.Response) => {
-            req.checkBody({
-                password: {
-                    byValidationObject: {
-                        options: SystemConfiguration.validations.password,
-                        errorMessage: "Password doesn't match validation requirements",
-                    },
-                },
-            });
 
-            await req.validateRequest();
+            req.validateRequest();
 
-            const password: string = String(req.body.password || '');
-            const phoneNumber: IPhoneNumberDocument = (req as any).phone;
+            const phone: IPhoneNumberDocument = (req as any).phone;
 
             const user = await User.getSingle({
-                'phone.prefix': phoneNumber.prefix,
-                'phone.number': phoneNumber.number,
+                'phone.prefix': phone.prefix,
+                'phone.number': phone.number,
             });
 
-            if ( ! user ) {
+            if (!user) {
                 throw AppError.ObjectDoesNotExist;
             }
 
-            if ( user.blocked ) {
+            if (user.blocked) {
                 throw AppError.UserBlocked;
-            }
-
-            const currentPassword = user.getCurrentPassword();
-            if ( ! currentPassword || ! currentPassword.compare(password) ) {
-                throw AppError.PasswordDoesNotMatch;
             }
 
             const token = user.createAuthToken();
 
             await user.save();
+
+            await PhoneConfirmationRequest
+                .deleteMany({
+                    'phone.prefix': phone.prefix,
+                    'phone.number': phone.number,
+                });
 
             res.response({
                 user: user.selfUser(),
@@ -61,18 +56,10 @@ router
 
     .post(
         '/send-sms',
-        getPhoneNumberFromRequest(),
+        ...getPhoneNumberFromRequest(),
         asyncMiddleware(async (req: express.Request, res: express.Response) => {
+
             const phoneNumber: IPhoneNumberDocument = (req as any).phone;
-
-            const user = await User.findOne({
-                'phone.prefix': phoneNumber.prefix,
-                'phone.number': phoneNumber.number,
-            });
-
-            if ( user ) {
-                throw AppError.ObjectExist;
-            }
 
             const code = process.env.ENV === 'DEV' ? '1992' : Utilities.randomString(
                 SystemConfiguration.validations.confirmationCode.minLength,
@@ -92,59 +79,70 @@ router
             // TODO: SMS: Sending verification code message
 
             res.response();
-        }),
-    )
-
-    .post(
-        '/check-code-valid',
-        getPhoneNumberFromRequest(),
-        checkPhoneNumberConfirmationRequestBeforeSignUp(),
-        (req: express.Request, res: express.Response) => {
-            res.response();
-        },
+        })
     )
 
     .post(
         '/sign-up',
-        getPhoneNumberFromRequest(),
-        checkPhoneNumberConfirmationRequestBeforeSignUp(),
-        asyncMiddleware(async (req: express.Request, res: express.Response) => {
-            req.checkBody({
-                password: {
-                    byValidationObject: {
-                        options: SystemConfiguration.validations.password,
-                        errorMessage: "Password doesn't match validation requirements",
-                    },
-                },
+        ...checkPhoneNumberConfirmationRequest(),
+        [
+            body('role', 'Role field is missing')
+                .exists()
+                .isIn(Object.values(UserRole)).withMessage('Wrong user role is provided'),
+            body('fullName', 'Fullname field is missing')
+                .exists()
+                .custom((input) => {
+
+                    if (!SystemConfiguration.validations.fullName.isValid(input)) {
+
+                        throw new Error("Fullname doesn't match validation requirements");
+                    }
+
+                    return true;
+                })
+        ],
+        asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+
+            req.validateRequest();
+
+            const { fullName, role } = req.body;
+            const phone: IPhoneNumberDocument = (req as any).phone;
+
+            let user = await User.getSingle({
+                'phone.prefix': phone.prefix,
+                'phone.number': phone.number,
             });
 
-            await req.validateRequest();
+            if (!!user) {
 
-            const password: string = String(req.body.password || '');
-            const phoneNumber: IPhoneNumberDocument = (req as any).phone;
+                throw AppError.ObjectExist;
+            }
 
-            const user = new User({
-                phone: phoneNumber,
+            user = new User({
+                phone,
+                role,
+                profile: {
+                    fullName
+                }
             });
 
             const token = user.createAuthToken();
-            user.changePassword(password);
 
             await user.save();
 
-            PhoneConfirmationRequest
+            await PhoneConfirmationRequest
                 .deleteMany({
-                    'phone.prefix': phoneNumber.prefix,
-                    'phone.number': phoneNumber.number,
-                })
-                .then(() => {})
-                .catch(() => {});
+                    'phone.prefix': phone.prefix,
+                    'phone.number': phone.number,
+                });
 
             res.response({
                 user: user.selfUser(),
                 token: token.authToken,
             });
-        }),
+
+            next();
+        })
     )
 
     .delete(
@@ -157,62 +155,45 @@ router
             await req.user.save();
 
             res.response();
-        }),
+        })
     );
 
-export function getPhoneNumberFromRequest() {
-    return asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        req.checkBody('phone.prefix',         'Phone number prefix missing').notEmpty();
-        req.checkBody('phone.number',         'Phone number missing').notEmpty();
+function checkPhoneNumberConfirmationRequest() {
+    return [
+        ...getPhoneNumberFromRequest(),
+        [
+            body('code', 'Code field is missing')
+                .exists()
+                .custom((value) => {
 
-        await req.validateRequest();
+                    if (!SystemConfiguration.validations.confirmationCode.isValid(value)) {
 
-        (req as any).phone = new PhoneNumber({
-            prefix: req.body.phone.prefix,
-            number: req.body.phone.number,
-        });
+                        throw new Error("Code doesn't match validation requirements");
+                    }
 
-        next();
-    });
-}
+                    return true;
+                })
+        ],
+        asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
 
-function checkPhoneNumberConfirmationRequestBeforeSignUp() {
-    return asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        req.checkBody({
-            code: {
-                byValidationObject: {
-                    options: SystemConfiguration.validations.confirmationCode,
-                    errorMessage: "Password doesn't match validation requirements",
-                },
-            },
-        });
+            req.validateRequest();
 
-        await req.validateRequest();
+            const phoneNumber: IPhoneNumberDocument = (req as any).phone;
+            const code = String(req.body.code || '');
 
-        const phoneNumber: IPhoneNumberDocument = (req as any).phone;
-        const code = String(req.body.code || '');
+            const phoneConfirmationRequests = await PhoneConfirmationRequest.findOne({
+                'phone.prefix': phoneNumber.prefix,
+                'phone.number': phoneNumber.number,
+                'code': code,
+            });
 
-        const userExists = await User.count({
-            'phone.prefix': phoneNumber.prefix,
-            'phone.number': phoneNumber.number,
-        });
+            if (!phoneConfirmationRequests) {
+                throw AppError.PhoneConfirmationFailed;
+            }
 
-        if ( userExists ) {
-            throw AppError.ObjectExist;
-        }
-
-        const phoneConfirmationRequests = await PhoneConfirmationRequest.findOne({
-            'phone.prefix': phoneNumber.prefix,
-            'phone.number': phoneNumber.number,
-            'code': code,
-        });
-
-        if ( ! phoneConfirmationRequests ) {
-            throw AppError.ObjectDoesNotExist;
-        }
-
-        next();
-    });
+            next();
+        })
+    ];
 }
 
 export default router;

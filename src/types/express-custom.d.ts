@@ -2,7 +2,7 @@
 declare namespace Express {
     // tslint:disable-next-line:interface-name
     export interface Request {
-        validateRequest(): Promise<void>;
+        validateRequest(): void;
         user?: any;
         authToken?: any;
         mobileDevice(): boolean;
