@@ -4,8 +4,6 @@ declare interface String {
     isEmail(): boolean;
     toRegex(): RegExp;
     searchToRegex(removeSpecialCharacters?: boolean, start?: boolean, end?: boolean): RegExp;
-    padStart(padWith: string, length: number): string;
-    padEnd(padWith: string, length: number): string;
     parseJson(): any;
     isMongoId(): boolean;
     encodeHtml(): string;

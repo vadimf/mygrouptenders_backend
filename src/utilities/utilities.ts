@@ -30,7 +30,7 @@ export class Utilities {
      */
     public static isIsraeliIdNumberValid(num: string): boolean {
         let tot = 0;
-        const tz: string = num.padStart('0', 9);
+        const tz: string = num.padStart(9, '0');
 
         for (let i = 0; i < 8; i++) {
             let x = ((i % 2) + 1) * (+tz.charAt(i));
@@ -59,19 +59,19 @@ export class Utilities {
     public static randomString(length: number = 64, includeLowercase: boolean = true, includeUppercase: boolean = true, includeDashes: boolean = false, includeSpecialCharacters: boolean = false): string {
         let allowedCharacters = '0123456789';
 
-        if ( includeLowercase ) {
+        if (includeLowercase) {
             allowedCharacters += 'abcdefghijklmnopqrstuvwxyz';
         }
 
-        if ( includeUppercase ) {
+        if (includeUppercase) {
             allowedCharacters += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         }
 
-        if ( includeDashes ) {
+        if (includeDashes) {
             allowedCharacters += '-_';
         }
 
-        if ( includeSpecialCharacters ) {
+        if (includeSpecialCharacters) {
             allowedCharacters += '!@#$%^&*()+=';
         }
 
@@ -156,11 +156,11 @@ Number.prototype.toRad = function(): number {
 Number.prototype.between = function(from: number, to?: number): boolean {
     let success = true;
 
-    if ( from ) {
+    if (from) {
         success = this >= from;
     }
 
-    if ( success && to ) {
+    if (success && to) {
         success = this <= to;
     }
 
@@ -173,11 +173,11 @@ Number.prototype.between = function(from: number, to?: number): boolean {
  * @returns {number}
  */
 Number.prototype.addPercent = function(percent: number): number {
-    if ( ! this ) {
+    if (!this) {
         return 0;
     }
 
-    if ( percent <= 0 ) {
+    if (percent <= 0) {
         return this;
     }
 
@@ -190,11 +190,11 @@ Number.prototype.addPercent = function(percent: number): number {
  * @returns {number}
  */
 Number.prototype.subtractPercent = function(percent: number): number {
-    if ( ! this ) {
+    if (!this) {
         return 0;
     }
 
-    if ( percent <= 0 ) {
+    if (percent <= 0) {
         return this;
     }
 
@@ -210,7 +210,7 @@ Number.prototype.subtractPercent = function(percent: number): number {
 Array.prototype.removeItem = function(item: any): number {
     const index = this.indexOf(item);
 
-    if ( index !== -1 ) {
+    if (index !== -1) {
         this.splice(index, 1);
     }
 
@@ -223,7 +223,7 @@ Array.prototype.removeItem = function(item: any): number {
  * @returns {number[]}
  */
 Array.prototype.convertStringToNumber = function(): number[] {
-    if ( ! this.isOfType('string') ) {
+    if (!this.isOfType('string')) {
         return null;
     }
 
@@ -271,7 +271,7 @@ Array.prototype.isOfType = function(type: string): boolean {
     let typeCorrect = false;
 
     this.forEach((item: any) => {
-        if ( ! typeCorrect && (typeof item).toLowerCase() === type ) {
+        if (!typeCorrect && (typeof item).toLowerCase() === type) {
             typeCorrect = true;
             return;
         }
@@ -299,8 +299,8 @@ Array.prototype.removeByIndex = function(index: number): number {
  * @returns {Array<any>}
  */
 Array.prototype.clean = function() {
-    for ( let i = 0; i < this.length; i++ ) {
-        if ( this[i] === undefined ) {
+    for (let i = 0; i < this.length; i++) {
+        if (this[i] === undefined) {
             this.splice(i, 1);
             i--;
         }
@@ -344,32 +344,6 @@ String.prototype.toRegex = function(): RegExp {
 String.prototype.searchToRegex = function(removeSpecialCharacters = true, start = true, end = true): RegExp {
     const searchString = removeSpecialCharacters ? this.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, '') : this;
     return ('/' + (start ? '.*' : '') + searchString + (end ? '.*' : '') + '/i').toRegex();
-};
-
-/**
- * Add characters to the beginning of the string
- *
- * @param {string} padWith
- * @param {number} length
- * @returns {String}
- */
-String.prototype.padStart = function(padWith: string, length: number): string {
-    let str = this;
-    while (str.length < length) { str = padWith + str; }
-    return str;
-};
-
-/**
- * Add characters to the end of the string
- *
- * @param {string} padWith
- * @param {number} length
- * @returns {String}
- */
-String.prototype.padEnd = function(padWith: string, length: number): string {
-    let str = this;
-    while (str.length < length) { str = str + padWith; }
-    return str;
 };
 
 /**
