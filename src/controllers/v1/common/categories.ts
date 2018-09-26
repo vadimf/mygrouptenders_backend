@@ -53,6 +53,8 @@ router
     .get('/search', [
         query('term', 'Term query param is missing')
             .exists()
+            .not()
+            .isEmpty()
             .customSanitizer((value) => {
 
                 return !!value ? value.searchToRegex() : null;
