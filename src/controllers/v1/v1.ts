@@ -1,9 +1,12 @@
 import * as express from 'express';
+
 import { isUserAuthenticated } from '../../config/passport';
-import {default as AuthRouter } from './auth/auth';
-import {default as LanguagesRouter } from './common/languages';
-import {default as SystemRouter } from './common/system';
-import {default as UserRouter } from './user/user';
+import AuthRouter from './auth/auth';
+import ClientRouter from './client/client';
+import CategoriesRouter from './common/categories';
+import LanguagesRouter from './common/languages';
+import SystemRouter from './common/system';
+import UserRouter from './user/user';
 
 const router = express.Router();
 
@@ -12,9 +15,11 @@ router.use((req: express.Request, res: express.Response, next: express.NextFunct
     next();
 });
 
-router.use('/system',                                           SystemRouter);
-router.use('/languages',                                        LanguagesRouter);
-router.use('/auth',                                             AuthRouter);
-router.use('/user',             isUserAuthenticated(),          UserRouter);
+router.use('/system', SystemRouter);
+router.use('/languages', LanguagesRouter);
+router.use('/auth', AuthRouter);
+router.use('/user', isUserAuthenticated(), UserRouter);
+router.use('/client', isUserAuthenticated(), ClientRouter);
+router.use('/categories', isUserAuthenticated(), CategoriesRouter);
 
 export default router;
