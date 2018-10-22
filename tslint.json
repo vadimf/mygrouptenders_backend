@@ -1,7 +1,5 @@
 {
-    "extends": [
-        "tslint:recommended"
-    ],
+    "extends": ["tslint:recommended"],
     "rules": {
         "class-name": true,
         "object-literal-sort-keys": false,
@@ -12,30 +10,12 @@
         "no-console": false,
         "variable-name": false,
         "trailing-comma": false,
-        "comment-format": [
-            true,
-            "check-space"
-        ],
-        "indent": [
-            true,
-            "spaces"
-        ],
-        "one-line": [
-            true,
-            "check-open-brace",
-            "check-whitespace"
-        ],
+        "comment-format": [true, "check-space"],
+        "indent": [true, "spaces", 4],
+        "one-line": [true, "check-open-brace", "check-whitespace"],
         "no-var-keyword": true,
-        "quotemark": [
-            true,
-            "single",
-            "avoid-escape"
-        ],
-        "semicolon": [
-            true,
-            "always",
-            "ignore-bound-class-methods"
-        ],
+        "quotemark": [true, "single", "avoid-escape"],
+        "semicolon": [true, "always", "ignore-bound-class-methods"],
         "whitespace": [
             true,
             "check-branch",
@@ -66,6 +46,7 @@
         "no-trailing-whitespace": true,
         "no-null-keyword": false,
         "prefer-const": true,
-        "jsdoc-format": true
+        "jsdoc-format": true,
+        "object-literal-key-quotes": [true, "as-needed"]
     }
 }
