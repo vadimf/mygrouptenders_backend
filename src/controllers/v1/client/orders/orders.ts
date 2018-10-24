@@ -7,26 +7,36 @@ import asyncMiddleware from '../../../../utilities/async-middleware';
 
 const router = Router();
 
-router.post(
-  '/',
-  asyncMiddleware(async (req: Request, res: Response) => {
-    const order = new Order({
-      client: req.user._id,
-      ...req.body
-    });
+router
+  .post(
+    '/',
+    asyncMiddleware(async (req: Request, res: Response) => {
+      const order = new Order({
+        client: req.user._id,
+        ...req.body
+      });
 
-    try {
-      await order.validate();
-    } catch (e) {
-      throw new AppErrorWithData(AppError.RequestValidation, e);
-    }
+      try {
+        await order.validate();
+      } catch (e) {
+        throw new AppErrorWithData(AppError.RequestValidation, e);
+      }
 
-    const orderDocument = await order.save();
+      const orderDocument = await order.save();
 
-    res.response({
-      order: await orderDocument.toJSON()
-    });
-  })
-);
+      res.response({
+        order: await orderDocument.populateAll()
+      });
+    })
+  )
+
+  .get(
+    '/',
+    asyncMiddleware(async (req: Request, res: Response) => {
+      res.response({
+        orders: await Order.get({ client: req.user._id })
+      });
+    })
+  );
 
 export default router;

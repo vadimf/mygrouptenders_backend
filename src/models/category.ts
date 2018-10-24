@@ -16,12 +16,6 @@ export const CategorySchema = new Schema({
   displayOrder: Number
 });
 
-CategorySchema.methods.toJSON = function() {
-  const category: ICategoryDocument = this.toObject();
-
-  delete category.__v;
-
-  return category;
-};
+CategorySchema.set('toJSON', { versionKey: false });
 
 export const Category = model<ICategoryDocument>('Category', CategorySchema);

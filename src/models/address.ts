@@ -27,10 +27,4 @@ export const AddressSchema = new Schema(
   }
 );
 
-AddressSchema.methods.toJSON = function() {
-  const address: IAddressDocument = this.toObject();
-
-  delete address.__v;
-
-  return address;
-};
+AddressSchema.set('toJSON', { versionKey: false });

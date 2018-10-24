@@ -16,12 +16,6 @@ export const AreaSchema = new Schema({
   displayOrder: Number
 });
 
-AreaSchema.methods.toJSON = function() {
-  const area: IAreaDocument = this.toObject();
-
-  delete area.__v;
-
-  return area;
-};
+AreaSchema.set('toJSON', { versionKey: false });
 
 export const Area = model<IAreaDocument>('Area', AreaSchema);
