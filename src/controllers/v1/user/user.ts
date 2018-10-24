@@ -5,7 +5,6 @@ import { AppError } from '../../../models/app-error';
 import { IProfileDocument } from '../../../models/user/profile';
 import { User } from '../../../models/user/user';
 import asyncMiddleware from '../../../utilities/async-middleware';
-import { UploadProfilePicture } from './upload-profile-picture';
 import { updateUserProfileByRequest } from './user-update';
 
 const router = express.Router();
@@ -45,10 +44,10 @@ router
                 req.user.profile = {} as IProfileDocument;
             }
 
-            const profilePictureUploader = new UploadProfilePicture(req.user._id.toString());
-            profilePictureUploader.buffer = req.file.buffer;
+            // const profilePictureUploader = new UploadProfilePicture(req.user._id.toString());
+            // profilePictureUploader.buffer = req.file.buffer;
 
-            req.user.profile.picture = await profilePictureUploader.uploadUserProfilePicture();
+            // req.user.profile.picture = await profilePictureUploader.uploadUserProfilePicture();
 
             next();
         }),
@@ -81,13 +80,13 @@ router
                 req.user.profile = {} as IProfileDocument;
             }
 
-            const profilePictureUploader = new UploadProfilePicture(req.user._id.toString());
-            profilePictureUploader.buffer = Buffer.from(
-                String(req.body.file || ''),
-                'base64',
-            );
+            // const profilePictureUploader = new UploadProfilePicture(req.user._id.toString());
+            // profilePictureUploader.buffer = Buffer.from(
+            //     String(req.body.file || ''),
+            //     'base64',
+            // );
 
-            req.user.profile.picture = await profilePictureUploader.uploadUserProfilePicture();
+            // req.user.profile.picture = await profilePictureUploader.uploadUserProfilePicture();
 
             next();
         }),

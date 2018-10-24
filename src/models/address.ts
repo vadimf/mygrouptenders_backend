@@ -11,14 +11,26 @@ export interface IAddressDocument extends Document {
 
 export const AddressSchema = new Schema(
   {
-    address: String,
+    address: {
+      type: String,
+      required: true
+    },
     appartment: String,
     area: {
       type: Schema.Types.ObjectId,
-      ref: 'Area'
+      ref: 'Area',
+      required: true
     }
   },
   {
     _id: false
   }
 );
+
+AddressSchema.methods.toJSON = function() {
+  const address: IAddressDocument = this.toObject();
+
+  delete address.__v;
+
+  return address;
+};
