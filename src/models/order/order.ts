@@ -10,6 +10,7 @@ import {
 
 import { AddressSchema, IAddressDocument } from '../address';
 import { ICategoryDocument } from '../category';
+import { OrderStatus } from '../enums';
 import { IUserDocument } from '../user/user';
 
 export interface IOrderDocument extends Document {
@@ -19,6 +20,8 @@ export interface IOrderDocument extends Document {
   address: IAddressDocument;
   categories: ObjectId[] | ICategoryDocument[];
   budget: number;
+  urgent: boolean;
+  status: OrderStatus;
 
   toJSON: () => IOrderDocument;
   populateAll: () => IOrderDocument | IOrderDocument[];
@@ -57,7 +60,15 @@ const OrderSchema = new Schema(
         required: true
       }
     ],
-    budget: Number
+    budget: Number,
+    urgent: {
+      type: Boolean,
+      default: false
+    },
+    status: {
+      type: Number,
+      default: OrderStatus.Placed
+    }
   },
   {
     timestamps: true
@@ -65,6 +76,12 @@ const OrderSchema = new Schema(
 );
 
 OrderSchema.set('toJSON', { versionKey: false });
+
+OrderSchema.pre<IOrderDocument>('save', function(next) {
+  this.status = this.isNew ? OrderStatus.Placed : this.status;
+
+  next();
+});
 
 OrderSchema.method('populateAll', function() {
   return Order.populate(this, orderPopulation);
