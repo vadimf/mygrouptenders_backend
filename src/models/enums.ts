@@ -8,5 +8,6 @@ export enum UserRole {
 export enum OrderStatus {
   Placed,
   InProgress,
-  Completed
+  Completed,
+  Removed
 }

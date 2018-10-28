@@ -1,11 +1,11 @@
-import { ObjectId } from 'mongodb';
 import {
   Document,
   DocumentQuery,
   Model,
   model,
   ModelPopulateOptions,
-  Schema
+  Schema,
+  Types
 } from 'mongoose';
 
 import { AddressSchema, IAddressDocument } from '../address';
@@ -14,11 +14,11 @@ import { OrderStatus } from '../enums';
 import { IUserDocument } from '../user/user';
 
 export interface IOrderDocument extends Document {
-  client: ObjectId | IUserDocument;
+  client: Types.ObjectId | IUserDocument;
   description: string;
-  approvedBid: ObjectId;
+  approvedBid: Types.ObjectId;
   address: IAddressDocument;
-  categories: ObjectId[] | ICategoryDocument[];
+  categories: Types.ObjectId[] | ICategoryDocument[];
   budget: number;
   urgent: boolean;
   status: OrderStatus;
@@ -76,7 +76,7 @@ const OrderSchema = new Schema(
 
 OrderSchema.path('categories')
   .required(true)
-  .set(function(value: ObjectId[]) {
+  .set(function(value: Types.ObjectId[]) {
     return !!this.categories && !!this.categories.length
       ? this.categories
       : value;
@@ -95,7 +95,7 @@ OrderSchema.method('populateAll', function() {
 });
 
 OrderSchema.static('get', function(conditions: any) {
-  return Order.find(conditions).populate(orderPopulation);
+  return Order.find(conditions);
 });
 
 export const Order = model<IOrderDocument, IOrderModel>('Order', OrderSchema);

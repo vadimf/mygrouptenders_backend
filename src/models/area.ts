@@ -1,9 +1,8 @@
-import { ObjectId } from 'mongodb';
-import { Document, model, Schema } from 'mongoose';
+import { Document, model, Schema, Types } from 'mongoose';
 
 export interface IAreaDocument extends Document {
   title: string;
-  parent: ObjectId | IAreaDocument;
+  parent: Types.ObjectId | IAreaDocument;
   displayOrder: number;
 }
 

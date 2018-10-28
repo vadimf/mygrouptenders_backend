@@ -1,12 +1,11 @@
-import { ObjectId } from 'mongodb';
-import { Document, Schema } from 'mongoose';
+import { Document, Schema, Types } from 'mongoose';
 
 import { IAreaDocument } from './area';
 
 export interface IAddressDocument extends Document {
   address: string;
   appartment: string;
-  area: ObjectId | IAreaDocument;
+  area: Types.ObjectId | IAreaDocument;
 }
 
 export const AddressSchema = new Schema(

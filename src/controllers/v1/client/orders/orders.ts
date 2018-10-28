@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response, Router } from 'express';
+import { Types } from 'mongoose';
 
 import {
   param,
@@ -56,16 +57,19 @@ router
     asyncMiddleware(async (req: Request, res: Response) => {
       req.validateRequest();
 
-      const { status, page } = req.query;
+      const { status: statuses, page } = req.query;
 
       let conditions: any = {
-        client: req.user._id
+        client: req.user._id,
+        status: { $not: { $eq: OrderStatus.Removed } }
       };
 
-      if (!!status) {
+      if (!!statuses) {
         conditions = {
           ...conditions,
-          status: { $in: status }
+          status: {
+            $in: statuses
+          }
         };
       }
 
@@ -105,6 +109,28 @@ router
       res.response({
         order: await updatedOrder.populateAll()
       });
+    })
+  )
+
+  .delete(
+    '/:id',
+    [param('id').isMongoId()],
+    asyncMiddleware(async (req: Request, res: Response) => {
+      req.validateRequest();
+
+      const order = await Order.findById(req.params.id);
+
+      if (!order) {
+        throw AppError.ObjectDoesNotExist;
+      }
+
+      if (!(order.client as Types.ObjectId).equals(req.user._id)) {
+        throw AppError.ActionNotAllowed;
+      }
+
+      await order.update({ status: OrderStatus.Removed });
+
+      res.response();
     })
   );
 

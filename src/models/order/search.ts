@@ -1,11 +1,10 @@
-import { ObjectId } from 'mongodb';
-import { DocumentQuery } from 'mongoose';
+import { Types } from 'mongoose';
 
 import { SearchEngine } from '../abstractions/search-engine';
 import { IOrderDocument, IOrderModel, Order } from './order';
 
 export interface IOrderSearchConditions {
-  client: ObjectId;
+  client: Types.ObjectId;
   status: any;
 }
 

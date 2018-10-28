@@ -1,9 +1,8 @@
-import { ObjectId } from 'mongodb';
-import { Document, model, Schema } from 'mongoose';
+import { Document, model, Schema, Types } from 'mongoose';
 
 export interface ICategoryDocument extends Document {
   title: string;
-  parent: ObjectId | ICategoryDocument;
+  parent: Types.ObjectId | ICategoryDocument;
   displayOrder: number;
 }
 
