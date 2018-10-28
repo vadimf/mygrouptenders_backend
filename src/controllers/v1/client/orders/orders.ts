@@ -5,7 +5,10 @@ import { AppError } from '../../../../models/app-error';
 import { AppErrorWithData } from '../../../../models/app-error-with-data';
 import { OrderStatus } from '../../../../models/enums';
 import { Order } from '../../../../models/order/order';
-import asyncMiddleware from '../../../../utilities/async-middleware';
+import { OrderSearch } from '../../../../models/order/search';
+import asyncMiddleware, {
+  validatePageParams
+} from '../../../../utilities/async-middleware';
 
 const router = Router();
 
@@ -34,6 +37,7 @@ router
 
   .get(
     '/',
+    validatePageParams(),
     [
       (req: Request, res: Response, next: NextFunction) => {
         const status = req.query.statuses;
@@ -49,7 +53,8 @@ router
     asyncMiddleware(async (req: Request, res: Response) => {
       req.validateRequest();
 
-      const { status } = req.query;
+      const { status, page } = req.query;
+
       let conditions: any = {
         client: req.user._id
       };
@@ -61,9 +66,21 @@ router
         };
       }
 
+      const search = new OrderSearch(page || 1, conditions);
+
       res.response({
-        orders: await Order.get(conditions)
+        orders: await search.getResults(),
+        pagination: await search.getPagination()
       });
+    })
+  )
+
+  .put(
+    '/:id',
+    asyncMiddleware(async (req: Request, res: Response) => {
+      req.validateRequest();
+
+      res.response();
     })
   );
 
