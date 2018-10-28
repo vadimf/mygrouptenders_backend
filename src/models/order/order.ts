@@ -56,8 +56,7 @@ const OrderSchema = new Schema(
     categories: [
       {
         type: Schema.Types.ObjectId,
-        ref: 'Category',
-        required: true
+        ref: 'Category'
       }
     ],
     budget: Number,
@@ -74,6 +73,14 @@ const OrderSchema = new Schema(
     timestamps: true
   }
 );
+
+OrderSchema.path('categories')
+  .required(true)
+  .set(function(value: ObjectId[]) {
+    return !!this.categories && !!this.categories.length
+      ? this.categories
+      : value;
+  });
 
 OrderSchema.set('toJSON', { versionKey: false });
 

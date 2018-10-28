@@ -1,6 +1,9 @@
 import { NextFunction, Request, Response, Router } from 'express';
 
-import { query } from '../../../../../node_modules/express-validator/check';
+import {
+  param,
+  query
+} from '../../../../../node_modules/express-validator/check';
 import { AppError } from '../../../../models/app-error';
 import { AppErrorWithData } from '../../../../models/app-error-with-data';
 import { OrderStatus } from '../../../../models/enums';
@@ -77,10 +80,31 @@ router
 
   .put(
     '/:id',
+    [param('id').isMongoId()],
     asyncMiddleware(async (req: Request, res: Response) => {
       req.validateRequest();
 
-      res.response();
+      const order = await Order.findById(req.params.id);
+
+      if (!order) {
+        throw AppError.ObjectDoesNotExist;
+      }
+
+      delete req.body.status;
+
+      order.set(req.body);
+
+      try {
+        await order.validate();
+      } catch (e) {
+        throw new AppErrorWithData(AppError.RequestValidation, e);
+      }
+
+      const updatedOrder = await order.save();
+
+      res.response({
+        order: await updatedOrder.populateAll()
+      });
     })
   );
 
