@@ -2,13 +2,14 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { Types } from 'mongoose';
 
 import {
+  body as checkBody,
   param,
   query
 } from '../../../../../node_modules/express-validator/check';
 import { AppError } from '../../../../models/app-error';
 import { AppErrorWithData } from '../../../../models/app-error-with-data';
 import { OrderStatus } from '../../../../models/enums';
-import { Order } from '../../../../models/order/order';
+import { IOrderDocument, Order } from '../../../../models/order/order';
 import { OrderSearch } from '../../../../models/order/search';
 import asyncMiddleware, {
   validatePageParams
@@ -26,15 +27,13 @@ router
       });
 
       try {
-        await order.validate();
+        await order.save();
       } catch (e) {
         throw new AppErrorWithData(AppError.RequestValidation, e);
       }
 
-      const orderDocument = await order.save();
-
       res.response({
-        order: await orderDocument.populateAll()
+        order: await order.populateAll()
       });
     })
   )
@@ -88,26 +87,61 @@ router
     asyncMiddleware(async (req: Request, res: Response) => {
       req.validateRequest();
 
+      const body: Partial<IOrderDocument> = req.body;
       const order = await Order.findById(req.params.id);
 
       if (!order) {
         throw AppError.ObjectDoesNotExist;
       }
 
-      delete req.body.status;
+      if (!(order.client as Types.ObjectId).equals(req.user._id)) {
+        throw AppError.ActionNotAllowed;
+      }
 
-      order.set(req.body);
+      delete body.status;
+      delete body.expirationDate;
+
+      order.set(body);
 
       try {
-        await order.validate();
+        await order.save();
       } catch (e) {
         throw new AppErrorWithData(AppError.RequestValidation, e);
       }
 
-      const updatedOrder = await order.save();
+      res.response({
+        order: await order.populateAll()
+      });
+    })
+  )
+
+  .patch(
+    '/:id',
+    [param('id').isMongoId()],
+    asyncMiddleware(async (req: Request, res: Response) => {
+      req.validateRequest();
+
+      const { expirationDate } = req.body;
+      const order = await Order.findById(req.params.id);
+
+      if (!order) {
+        throw AppError.ObjectDoesNotExist;
+      }
+
+      if (!(order.client as Types.ObjectId).equals(req.user._id)) {
+        throw AppError.ActionNotAllowed;
+      }
+
+      order.set({ expirationDate });
+
+      try {
+        await order.save();
+      } catch (e) {
+        throw new AppErrorWithData(AppError.RequestValidation, e);
+      }
 
       res.response({
-        order: await updatedOrder.populateAll()
+        order: await order.populateAll()
       });
     })
   )
@@ -126,6 +160,10 @@ router
 
       if (!(order.client as Types.ObjectId).equals(req.user._id)) {
         throw AppError.ActionNotAllowed;
+      }
+
+      if (order.status === OrderStatus.InProgress) {
+        // TODO send notification to provider
       }
 
       await order.update({ status: OrderStatus.Removed });

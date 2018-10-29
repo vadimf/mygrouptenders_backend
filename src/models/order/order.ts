@@ -1,3 +1,4 @@
+import * as moment from 'moment';
 import {
   Document,
   DocumentQuery,
@@ -13,7 +14,10 @@ import { ICategoryDocument } from '../category';
 import { OrderStatus } from '../enums';
 import { IUserDocument } from '../user/user';
 
+export const MIN_PROLONGATION_HOURS = 12;
+
 export interface IOrderDocument extends Document {
+  expirationDate: Date;
   client: Types.ObjectId | IUserDocument;
   description: string;
   approvedBid: Types.ObjectId;
@@ -39,10 +43,32 @@ export const orderPopulation: ModelPopulateOptions[] = [
 
 const OrderSchema = new Schema(
   {
+    expirationDate: {
+      type: Schema.Types.Date,
+      validate: {
+        validator: function(value: any) {
+          if (!this.isModified('expirationDate')) {
+            return true;
+          }
+
+          const now = moment().startOf('minutes');
+          const momentValue = moment(value).startOf('minutes');
+
+          return momentValue.diff(now, 'h') >= MIN_PROLONGATION_HOURS;
+        }
+      },
+      default: moment()
+        .add(12, 'h')
+        .toDate(),
+      required: true
+    },
     client: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
+      set: function(value: Types.ObjectId) {
+        return this.client || value;
+      }
     },
     description: {
       type: String,
@@ -86,6 +112,11 @@ OrderSchema.set('toJSON', { versionKey: false });
 
 OrderSchema.pre<IOrderDocument>('save', function(next) {
   this.status = this.isNew ? OrderStatus.Placed : this.status;
+  this.expirationDate = this.isNew
+    ? moment()
+        .add(12, 'h')
+        .toDate()
+    : this.expirationDate;
 
   next();
 });
@@ -95,7 +126,7 @@ OrderSchema.method('populateAll', function() {
 });
 
 OrderSchema.static('get', function(conditions: any) {
-  return Order.find(conditions);
+  return Order.find(conditions).populate(orderPopulation);
 });
 
 export const Order = model<IOrderDocument, IOrderModel>('Order', OrderSchema);
