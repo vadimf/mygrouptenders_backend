@@ -81,6 +81,24 @@ router
     })
   )
 
+  .get(
+    '/:id',
+    [param('id').isMongoId()],
+    asyncMiddleware(async (req: Request, res: Response) => {
+      req.validateRequest();
+
+      const order = await Order.findById(req.params.id);
+
+      if (!order) {
+        throw AppError.ObjectDoesNotExist;
+      }
+
+      res.response({
+        order: await order.populateAll()
+      });
+    })
+  )
+
   .put(
     '/:id',
     [param('id').isMongoId()],
