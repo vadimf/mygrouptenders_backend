@@ -1,7 +1,6 @@
 import * as mongoose from 'mongoose';
 
 import { uuidv4 } from '../../utilities/UUID';
-import { UserRole } from '../enums';
 import {
   AuthenticationTokenSchema,
   IAuthenticationTokenDocument
@@ -9,13 +8,14 @@ import {
 import { IPassword } from './password';
 import { IPhoneNumberDocument, PhoneNumberSchema } from './phone-number';
 import { IProfileDocument, ProfileSchema } from './profile';
+import { ProviderSchema } from './provider';
 
 export interface IUserDocument extends mongoose.Document {
   profile: IProfileDocument;
   phone: IPhoneNumberDocument;
   tokens: IAuthenticationTokenDocument[];
   blocked: boolean;
-  role: UserRole;
+  provider?: IProfileDocument;
 
   getPasswordObject(password: string): IPassword | null;
   getCurrentPassword(): IPassword;
@@ -40,7 +40,7 @@ export const UserSchema = new mongoose.Schema(
     phone: { type: PhoneNumberSchema, index: true },
     tokens: { type: [AuthenticationTokenSchema], index: true },
     blocked: { type: Boolean, default: false },
-    role: { type: Number, required: true }
+    provider: ProviderSchema
   },
   {
     timestamps: true
@@ -61,7 +61,6 @@ UserSchema.method('commonData', function() {
   return {
     _id: this._id,
     createdAt: this.createdAt,
-    role: this.role,
     profile: this.profile || null,
     phone: this.phone || null
   };

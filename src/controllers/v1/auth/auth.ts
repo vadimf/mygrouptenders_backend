@@ -3,7 +3,6 @@ import { body } from 'express-validator/check';
 
 import { isUserAuthenticated } from '../../../config/passport';
 import { AppError } from '../../../models/app-error';
-import { UserRole } from '../../../models/enums';
 import { PhoneConfirmationRequest } from '../../../models/phone-confirmation-request';
 import { SystemConfiguration } from '../../../models/system-configuration';
 import { IAuthenticationTokenDocument } from '../../../models/user/authentication-token';
@@ -88,10 +87,6 @@ router
     '/sign-up',
     ...checkPhoneNumberConfirmationRequest(),
     [
-      body('role', 'Role field is missing')
-        .exists()
-        .isIn(Object.values(UserRole))
-        .withMessage('Wrong user role is provided'),
       body('fullName', 'Fullname field is missing')
         .exists()
         .custom((input) => {
@@ -110,7 +105,7 @@ router
       ) => {
         req.validateRequest();
 
-        const { fullName, role } = req.body;
+        const { fullName } = req.body;
         const phone: IPhoneNumberDocument = (req as any).phone;
 
         let user = await User.getSingle({
@@ -124,7 +119,6 @@ router
 
         user = new User({
           phone,
-          role,
           profile: {
             fullName
           }

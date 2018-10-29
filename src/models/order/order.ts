@@ -10,6 +10,7 @@ import {
 } from 'mongoose';
 
 import { AddressSchema, IAddressDocument } from '../address';
+import { IBidDocument } from '../bid';
 import { ICategoryDocument } from '../category';
 import { OrderStatus } from '../enums';
 import { IUserDocument } from '../user/user';
@@ -20,7 +21,7 @@ export interface IOrderDocument extends Document {
   expirationDate: Date;
   client: Types.ObjectId | IUserDocument;
   description: string;
-  approvedBid: Types.ObjectId;
+  approvedBid: Types.ObjectId | IBidDocument;
   address: IAddressDocument;
   categories: Types.ObjectId[] | ICategoryDocument[];
   budget: number;
@@ -74,7 +75,10 @@ const OrderSchema = new Schema(
       type: String,
       required: true
     },
-    approvedBid: Schema.Types.ObjectId,
+    approvedBid: {
+      type: Schema.Types.ObjectId,
+      ref: 'Bid'
+    },
     address: {
       type: AddressSchema,
       required: true
