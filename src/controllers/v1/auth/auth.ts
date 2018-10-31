@@ -19,6 +19,7 @@ const router = express.Router();
 router
   .post(
     '/sign-in',
+    ...getPhoneNumberFromRequest(),
     ...checkPhoneNumberConfirmationRequest(),
     asyncMiddleware(async (req: express.Request, res: express.Response) => {
       req.validateRequest();
@@ -39,11 +40,6 @@ router
       }
 
       const token = await user.createAuthToken();
-
-      await PhoneConfirmationRequest.deleteMany({
-        'phone.prefix': phone.prefix,
-        'phone.number': phone.number
-      });
 
       res.response({
         user: user.selfUser(),
@@ -84,6 +80,7 @@ router
 
   .post(
     '/sign-up',
+    ...getPhoneNumberFromRequest(),
     ...checkPhoneNumberConfirmationRequest(),
     [
       body('fullName').custom((input) => {
@@ -127,11 +124,6 @@ router
         await user.save();
 
         const token = await user.createAuthToken();
-
-        await PhoneConfirmationRequest.deleteMany({
-          'phone.prefix': phone.prefix,
-          'phone.number': phone.number
-        });
 
         res.response({
           user: user.selfUser(),

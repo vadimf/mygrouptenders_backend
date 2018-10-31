@@ -76,7 +76,6 @@ export function dynamicMiddlewares(
 
 export function checkPhoneNumberConfirmationRequest() {
   return [
-    ...getPhoneNumberFromRequest(),
     [
       body('code', 'Code field is missing')
         .exists()
@@ -106,6 +105,11 @@ export function checkPhoneNumberConfirmationRequest() {
       if (!phoneConfirmationRequests) {
         throw AppError.PhoneConfirmationFailed;
       }
+
+      await PhoneConfirmationRequest.deleteMany({
+        'phone.prefix': phoneNumber.prefix,
+        'phone.number': phoneNumber.number
+      });
 
       next();
     })

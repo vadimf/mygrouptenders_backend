@@ -28,4 +28,8 @@ export const ProviderSchema = new Schema(
   }
 );
 
+ProviderSchema.path('categories').required(true);
+
+ProviderSchema.path('areas').required(true);
+
 ProviderSchema.set('toJSON', { versionKey: false });

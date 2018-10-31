@@ -42,7 +42,9 @@ export interface IUserModel extends Model<IUserDocument> {
 }
 
 export const userPopulation: ModelPopulateOptions[] = [
-  { path: 'profile.address.area', populate: { path: 'parent' } }
+  { path: 'profile.address.area', populate: { path: 'parent' } },
+  { path: 'provider.categories', populate: { path: 'parent' } },
+  { path: 'provider.areas', populate: { path: 'parent' } }
 ];
 
 export const UserSchema = new Schema(
@@ -56,7 +58,12 @@ export const UserSchema = new Schema(
         return this.tokens;
       }
     },
-    blockDate: Schema.Types.Date,
+    blockDate: {
+      type: Schema.Types.Date,
+      set: function() {
+        return this.blockDate;
+      }
+    },
     blocked: {
       type: Boolean,
       default: false,
@@ -77,7 +84,8 @@ UserSchema.method('commonData', function() {
     _id: this._id,
     createdAt: this.createdAt,
     profile: this.profile || null,
-    phone: this.phone || null
+    phone: this.phone || null,
+    provider: this.provider || null
   };
 });
 

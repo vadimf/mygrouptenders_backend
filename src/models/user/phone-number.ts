@@ -5,6 +5,7 @@ export interface IPhoneNumberDocument extends Document {
   number: string;
 
   toDisplay(): string;
+  compare(): boolean;
 }
 
 export const PhoneNumberSchema = new Schema(
@@ -30,6 +31,12 @@ PhoneNumberSchema.method('toString', function() {
 
 PhoneNumberSchema.method('toDisplay', function() {
   return (this.number.charAt(0) === '0' ? '' : '0') + this.number;
+});
+
+PhoneNumberSchema.method('compare', function(phone: IPhoneNumberDocument) {
+  return (
+    !!phone && this.prefix === phone.prefix && this.number === phone.number
+  );
 });
 
 export const PhoneNumber = model<IPhoneNumberDocument>(

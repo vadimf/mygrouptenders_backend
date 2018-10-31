@@ -9,7 +9,8 @@ import { IProfileDocument } from '../../../models/user/profile';
 import { User } from '../../../models/user/user';
 import asyncMiddleware, {
   checkPhoneNumberConfirmationRequest,
-  dynamicMiddlewares
+  dynamicMiddlewares,
+  getPhoneNumberFromRequest
 } from '../../../utilities/async-middleware';
 
 const router = Router();
@@ -27,25 +28,30 @@ router
   .put(
     '/',
     asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+      let middlewares: any[] = [];
+
       if (req.body.phone) {
-        dynamicMiddlewares(
-          [
-            ...checkPhoneNumberConfirmationRequest(),
-            asyncMiddleware(async function() {
-              const phone: IPhoneNumberDocument = req.phone;
+        middlewares = middlewares.concat([
+          ...getPhoneNumberFromRequest(),
+          function() {
+            if (!req.user.phone.compare(req.phone)) {
+              dynamicMiddlewares(
+                checkPhoneNumberConfirmationRequest(),
+                req,
+                res,
+                next
+              );
 
-              await PhoneConfirmationRequest.deleteMany({
-                'phone.prefix': phone.prefix,
-                'phone.number': phone.number
-              });
+              return;
+            }
 
-              next();
-            })
-          ],
-          req,
-          res,
-          next
-        );
+            next();
+          }
+        ]);
+      }
+
+      if (!!middlewares.length) {
+        dynamicMiddlewares(middlewares, req, res, next);
       } else {
         next();
       }
