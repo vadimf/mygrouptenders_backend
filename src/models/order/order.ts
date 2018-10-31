@@ -29,7 +29,7 @@ export interface IOrderDocument extends Document {
   status: OrderStatus;
 
   toJSON: () => IOrderDocument;
-  populateAll: () => IOrderDocument | IOrderDocument[];
+  populateAll: () => Promise<IOrderDocument>;
 }
 
 export interface IOrderModel extends Model<IOrderDocument> {

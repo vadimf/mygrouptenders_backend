@@ -9,6 +9,7 @@ import { IAuthenticationTokenDocument } from '../../../models/user/authenticatio
 import { IPhoneNumberDocument } from '../../../models/user/phone-number';
 import { User } from '../../../models/user/user';
 import asyncMiddleware, {
+  checkPhoneNumberConfirmationRequest,
   getPhoneNumberFromRequest
 } from '../../../utilities/async-middleware';
 import { Utilities } from '../../../utilities/utilities';
@@ -37,9 +38,7 @@ router
         throw AppError.UserBlocked;
       }
 
-      const token = user.createAuthToken();
-
-      await user.save();
+      const token = await user.createAuthToken();
 
       await PhoneConfirmationRequest.deleteMany({
         'phone.prefix': phone.prefix,
@@ -87,15 +86,16 @@ router
     '/sign-up',
     ...checkPhoneNumberConfirmationRequest(),
     [
-      body('fullName', 'Fullname field is missing')
-        .exists()
-        .custom((input) => {
-          if (!SystemConfiguration.validations.fullName.isValid(input)) {
-            throw new Error("Fullname doesn't match validation requirements");
-          }
+      body('fullName').custom((input) => {
+        if (
+          !!input &&
+          !SystemConfiguration.validations.fullName.isValid(input)
+        ) {
+          throw new Error("Fullname doesn't match validation requirements");
+        }
 
-          return true;
-        })
+        return true;
+      })
     ],
     asyncMiddleware(
       async (
@@ -124,9 +124,9 @@ router
           }
         });
 
-        const token = user.createAuthToken();
-
         await user.save();
+
+        const token = await user.createAuthToken();
 
         await PhoneConfirmationRequest.deleteMany({
           'phone.prefix': phone.prefix,
@@ -158,50 +158,5 @@ router
       res.response();
     })
   );
-
-function checkPhoneNumberConfirmationRequest() {
-  return [
-    ...getPhoneNumberFromRequest(),
-    [
-      body('code', 'Code field is missing')
-        .exists()
-        .custom((value) => {
-          if (
-            !SystemConfiguration.validations.confirmationCode.isValid(value)
-          ) {
-            throw new Error("Code doesn't match validation requirements");
-          }
-
-          return true;
-        })
-    ],
-    asyncMiddleware(
-      async (
-        req: express.Request,
-        res: express.Response,
-        next: express.NextFunction
-      ) => {
-        req.validateRequest();
-
-        const phoneNumber: IPhoneNumberDocument = (req as any).phone;
-        const code = String(req.body.code || '');
-
-        const phoneConfirmationRequests = await PhoneConfirmationRequest.findOne(
-          {
-            'phone.prefix': phoneNumber.prefix,
-            'phone.number': phoneNumber.number,
-            code: code
-          }
-        );
-
-        if (!phoneConfirmationRequests) {
-          throw AppError.PhoneConfirmationFailed;
-        }
-
-        next();
-      }
-    )
-  ];
-}
 
 export default router;

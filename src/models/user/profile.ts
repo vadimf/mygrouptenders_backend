@@ -1,19 +1,20 @@
-import * as mongoose from 'mongoose';
+import { Document, Schema } from 'mongoose';
 
 import { AddressSchema, IAddressDocument } from '../address';
 import { FileSchema, IFileDocument } from '../file';
 
-export interface IProfileDocument extends mongoose.Document {
+export interface IProfileDocument extends Document {
   fullName: string;
   picture: IFileDocument;
   address: IAddressDocument;
-
-  getFullName(): string;
 }
 
-export const ProfileSchema = new mongoose.Schema(
+export const ProfileSchema = new Schema(
   {
-    fullName: String,
+    fullName: {
+      type: Schema.Types.String,
+      required: true
+    },
     picture: { type: FileSchema },
     address: AddressSchema
   },
@@ -21,9 +22,3 @@ export const ProfileSchema = new mongoose.Schema(
     _id: false
   }
 );
-ProfileSchema.method('toJSON', function() {
-  return {
-    fullName: this.fullName,
-    picture: this.picture ? this.picture : null
-  };
-});

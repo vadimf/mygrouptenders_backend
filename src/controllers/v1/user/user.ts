@@ -1,134 +1,161 @@
-import * as express from 'express';
-import * as mongoose from 'mongoose';
+import { NextFunction, Request, Response, Router } from 'express';
+import { Types } from 'mongoose';
 import multer = require('multer');
+
 import { AppError } from '../../../models/app-error';
+import { PhoneConfirmationRequest } from '../../../models/phone-confirmation-request';
+import { IPhoneNumberDocument } from '../../../models/user/phone-number';
 import { IProfileDocument } from '../../../models/user/profile';
 import { User } from '../../../models/user/user';
-import asyncMiddleware from '../../../utilities/async-middleware';
-import { updateUserProfileByRequest } from './user-update';
+import asyncMiddleware, {
+  checkPhoneNumberConfirmationRequest,
+  dynamicMiddlewares
+} from '../../../utilities/async-middleware';
 
-const router = express.Router();
+const router = Router();
 const storage = multer.memoryStorage();
 const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 52428800,
-    },
+  storage: storage,
+  limits: {
+    fileSize: 52428800
+  }
 });
 
 router
-    .get('/', respondWithUserObject())
+  .get('/', respondWithUserObject())
 
-    .put(
-        '/',
-        updateUserProfileByRequest(),
-        asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            await req.validateRequest();
-            next();
-        }),
-        respondWithUserObject(),
-    );
+  .put(
+    '/',
+    asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+      if (req.body.phone) {
+        dynamicMiddlewares(
+          [
+            ...checkPhoneNumberConfirmationRequest(),
+            asyncMiddleware(async function() {
+              const phone: IPhoneNumberDocument = req.phone;
 
-router
-    .route('/profile-picture')
-    .put(
-        upload.single('file'),
-        asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            // (req.checkBody('file', 'Uploaded file is not an image, file name extension must contain one of the following extensions: .jpg, .jpeg, .png') as any).isImage(req.file);
+              await PhoneConfirmationRequest.deleteMany({
+                'phone.prefix': phone.prefix,
+                'phone.number': phone.number
+              });
 
-            await req.validateRequest();
+              next();
+            })
+          ],
+          req,
+          res,
+          next
+        );
+      } else {
+        next();
+      }
+    }),
+    asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+      req.user.set(req.body);
 
-            req.setTimeout(0, null);
+      await req.user.save();
 
-            if ( ! req.user.profile ) {
-                req.user.profile = {} as IProfileDocument;
-            }
-
-            // const profilePictureUploader = new UploadProfilePicture(req.user._id.toString());
-            // profilePictureUploader.buffer = req.file.buffer;
-
-            // req.user.profile.picture = await profilePictureUploader.uploadUserProfilePicture();
-
-            next();
-        }),
-        respondWithUserObject(),
-    )
-    .delete(
-        (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            if ( req.user.profile ) {
-                req.user.profile.picture = null;
-            }
-
-            next();
-        },
-        respondWithUserObject(),
-    );
+      res.response({
+        user: (await req.user.populateAll()).selfUser()
+      });
+    })
+  );
 
 router
-    .put(
-        '/profile-picture/base64',
-        upload.single('file'),
-        asyncMiddleware(async (req: express.Request, res: express.Response, next: express.NextFunction) => {
-            // (req.checkBody("file", "Uploaded file is not an image, file name extension must contain one of the following extensions: .jpg, .jpeg, .png") as any).isImage(req.file);
-            // req.checkBody('file', 'Base64 is invalid').isBase64();
+  .route('/profile-picture')
+  .put(
+    upload.single('file'),
+    asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+      // (req.checkBody('file', 'Uploaded file is not an image, file name extension must contain one of the following extensions: .jpg, .jpeg, .png') as any).isImage(req.file);
 
-            await req.validateRequest();
+      await req.validateRequest();
 
-            req.setTimeout(0, null);
+      req.setTimeout(0, null);
 
-            if ( ! req.user.profile ) {
-                req.user.profile = {} as IProfileDocument;
-            }
+      if (!req.user.profile) {
+        req.user.profile = {} as IProfileDocument;
+      }
 
-            // const profilePictureUploader = new UploadProfilePicture(req.user._id.toString());
-            // profilePictureUploader.buffer = Buffer.from(
-            //     String(req.body.file || ''),
-            //     'base64',
-            // );
+      // const profilePictureUploader = new UploadProfilePicture(req.user._id.toString());
+      // profilePictureUploader.buffer = req.file.buffer;
 
-            // req.user.profile.picture = await profilePictureUploader.uploadUserProfilePicture();
+      // req.user.profile.picture = await profilePictureUploader.uploadUserProfilePicture();
 
-            next();
-        }),
-        respondWithUserObject(),
-    );
+      next();
+    }),
+    respondWithUserObject()
+  )
+  .delete((req: Request, res: Response, next: NextFunction) => {
+    if (req.user.profile) {
+      req.user.profile.picture = null;
+    }
 
-router
-    .get(
-        '/:id',
-        asyncMiddleware(async (req: express.Request, res: express.Response) => {
-            // req.checkParams('id', 'ID is not valid').isMongoId();
+    next();
+  }, respondWithUserObject());
 
-            await req.validateRequest();
+router.put(
+  '/profile-picture/base64',
+  upload.single('file'),
+  asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+    // (req.checkBody("file", "Uploaded file is not an image, file name extension must contain one of the following extensions: .jpg, .jpeg, .png") as any).isImage(req.file);
+    // req.checkBody('file', 'Base64 is invalid').isBase64();
 
-            const userId = mongoose.Types.ObjectId(req.params.id);
-            const user = await User.getSingle({
-                _id: userId,
-                blocked: {
-                    $ne: true,
-                },
-            });
+    await req.validateRequest();
 
-            if ( ! user ) {
-                throw AppError.ObjectDoesNotExist;
-            }
+    req.setTimeout(0, null);
 
-            res.response({
-                user: user,
-            });
-        }),
-    );
+    if (!req.user.profile) {
+      req.user.profile = {} as IProfileDocument;
+    }
+
+    // const profilePictureUploader = new UploadProfilePicture(req.user._id.toString());
+    // profilePictureUploader.buffer = Buffer.from(
+    //     String(req.body.file || ''),
+    //     'base64',
+    // );
+
+    // req.user.profile.picture = await profilePictureUploader.uploadUserProfilePicture();
+
+    next();
+  }),
+  respondWithUserObject()
+);
+
+router.get(
+  '/:id',
+  asyncMiddleware(async (req: Request, res: Response) => {
+    // req.checkParams('id', 'ID is not valid').isMongoId();
+
+    await req.validateRequest();
+
+    const userId = Types.ObjectId(req.params.id);
+    const user = await User.getSingle({
+      _id: userId,
+      blocked: {
+        $ne: true
+      }
+    });
+
+    if (!user) {
+      throw AppError.ObjectDoesNotExist;
+    }
+
+    res.response({
+      user: user
+    });
+  })
+);
 
 function respondWithUserObject() {
-    return asyncMiddleware(async (req: express.Request, res: express.Response) => {
-        if ( req.user.isModified() ) {
-            await req.user.save();
-        }
+  return asyncMiddleware(async (req: Request, res: Response) => {
+    if (req.user.isModified()) {
+      await req.user.save();
+    }
 
-        res.response({
-            user: req.user.selfUser(),
-        });
+    res.response({
+      user: req.user.selfUser()
     });
+  });
 }
 
 export default router;
