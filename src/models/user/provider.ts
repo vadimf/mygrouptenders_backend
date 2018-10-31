@@ -2,10 +2,12 @@ import { Document, Schema, Types } from 'mongoose';
 
 import { IAreaDocument } from '../area';
 import { ICategoryDocument } from '../category';
+import { SystemConfiguration } from '../system-configuration';
 
 export interface IProviderDocument extends Document {
   categories: Types.ObjectId[] | ICategoryDocument[];
   areas: Types.ObjectId[] | IAreaDocument[];
+  overview: string;
 }
 
 export const ProviderSchema = new Schema(
@@ -21,7 +23,15 @@ export const ProviderSchema = new Schema(
         type: Schema.Types.ObjectId,
         ref: 'Area'
       }
-    ]
+    ],
+    overview: {
+      type: Schema.Types.String,
+      validate: function(value: string) {
+        return SystemConfiguration.validations.providerProfileOverview.isValid(
+          value
+        );
+      }
+    }
   },
   {
     _id: false
