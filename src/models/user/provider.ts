@@ -3,11 +3,13 @@ import { Document, Schema, Types } from 'mongoose';
 import { IAreaDocument } from '../area';
 import { ICategoryDocument } from '../category';
 import { SystemConfiguration } from '../system-configuration';
+import { IRatingDocument, RatingSchema } from './rating';
 
 export interface IProviderDocument extends Document {
   categories: Types.ObjectId[] | ICategoryDocument[];
   areas: Types.ObjectId[] | IAreaDocument[];
   overview: string;
+  rating: IRatingDocument;
 }
 
 export const ProviderSchema = new Schema(
@@ -31,7 +33,8 @@ export const ProviderSchema = new Schema(
           value
         );
       }
-    }
+    },
+    rating: RatingSchema
   },
   {
     _id: false
