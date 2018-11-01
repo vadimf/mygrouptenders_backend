@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { Types } from 'mongoose';
+import multer = require('multer');
 
 import {
-  body as checkBody,
   param,
   query
 } from '../../../../../node_modules/express-validator/check';
@@ -14,8 +14,22 @@ import { OrderSearch } from '../../../../models/order/search';
 import asyncMiddleware, {
   validatePageParams
 } from '../../../../utilities/async-middleware';
+import { MimeType } from '../../../../utilities/mime-type';
+import {
+  IStorageUploadingResults,
+  StorageManager
+} from '../../../../utilities/storage-manager';
+
+export const MAX_ORDERS_VIDEOS = 1;
 
 const router = Router();
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 52428800
+  }
+});
 
 router
   .post(
@@ -157,6 +171,56 @@ router
       } catch (e) {
         throw new AppErrorWithData(AppError.RequestValidation, e);
       }
+
+      res.response({
+        order: await order.populateAll()
+      });
+    })
+  )
+
+  .post(
+    '/:id/upload-media',
+    [param('id').isMongoId()],
+    upload.array('files', 6),
+    asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+      const order = await Order.findById(req.params.id);
+
+      if (!order) {
+        throw AppError.ObjectDoesNotExist;
+      }
+
+      const files = req.files as Express.Multer.File[];
+      const storageManager = new StorageManager();
+      const uploadedFiles: IStorageUploadingResults[] = [];
+      let videoAmount = 0;
+
+      for (const file of files) {
+        if (file.mimetype.startsWith('video')) {
+          if (videoAmount === MAX_ORDERS_VIDEOS) {
+            throw new AppErrorWithData(AppError.RequestValidation, {
+              message: 'Exceeded video limit'
+            });
+          }
+
+          videoAmount++;
+        }
+
+        const uploadedFile = await storageManager
+          .directory('orders/' + order._id)
+          .fromBuffer(file.buffer, {
+            allowedMimeTypes: [
+              MimeType.IMAGE_JPEG,
+              MimeType.IMAGE_PNG,
+              MimeType.VIDEO_MP4
+            ]
+          });
+
+        uploadedFiles.push(uploadedFile);
+      }
+
+      order.set('media', uploadedFiles);
+
+      await order.save();
 
       res.response({
         order: await order.populateAll()

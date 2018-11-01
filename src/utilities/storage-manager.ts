@@ -136,7 +136,7 @@ export class StorageManager {
         options
       );
 
-      if (options.allowedMimeTypes && !fileType) {
+      if (options && options.allowedMimeTypes && !fileType) {
         return reject({
           uploadingError:
             'Unable to retrieve mime-type from file (expected: ' +

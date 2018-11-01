@@ -3,8 +3,6 @@ import { Types } from 'mongoose';
 import multer = require('multer');
 
 import { AppError } from '../../../models/app-error';
-import { PhoneConfirmationRequest } from '../../../models/phone-confirmation-request';
-import { IPhoneNumberDocument } from '../../../models/user/phone-number';
 import { IProfileDocument } from '../../../models/user/profile';
 import { User } from '../../../models/user/user';
 import asyncMiddleware, {

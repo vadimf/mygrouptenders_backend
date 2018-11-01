@@ -13,6 +13,7 @@ import { AddressSchema, IAddressDocument } from '../address';
 import { IBidDocument } from '../bid';
 import { ICategoryDocument } from '../category';
 import { OrderStatus } from '../enums';
+import { FileSchema, IFileDocument } from '../file';
 import { IUserDocument } from '../user/user';
 
 export const MIN_PROLONGATION_HOURS = 12;
@@ -27,6 +28,7 @@ export interface IOrderDocument extends Document {
   budget: number;
   urgent: boolean;
   status: OrderStatus;
+  media: IFileDocument[];
 
   toJSON: () => IOrderDocument;
   populateAll: () => Promise<IOrderDocument>;
@@ -97,7 +99,8 @@ const OrderSchema = new Schema(
     status: {
       type: Number,
       default: OrderStatus.Placed
-    }
+    },
+    media: [FileSchema]
   },
   {
     timestamps: true
