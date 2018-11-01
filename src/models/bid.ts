@@ -1,6 +1,7 @@
-import { Document, model, Schema, Types } from 'mongoose';
+import { Document, model, ModelPopulateOptions, Schema, Types } from 'mongoose';
 
-import { IOrderDocument } from './order/order';
+import { IOrderDocument, orderPopulation } from './order/order';
+import { SystemConfiguration } from './system-configuration';
 import { IUserDocument } from './user/user';
 
 export interface IBidDocument extends Document {
@@ -10,7 +11,14 @@ export interface IBidDocument extends Document {
   bid: number;
   prevBids: number[];
   comment: string;
+
+  populateAll(): Promise<IBidDocument>;
 }
+
+export const bidPopulation: ModelPopulateOptions[] = [
+  { path: 'order', populate: orderPopulation },
+  { path: 'provider' }
+];
 
 export const BidSchema = new Schema({
   order: {
@@ -32,9 +40,18 @@ export const BidSchema = new Schema({
     required: true
   },
   prevBids: [Schema.Types.Number],
-  comment: Schema.Types.String
+  comment: {
+    type: Schema.Types.String,
+    validate: function(value: string) {
+      return SystemConfiguration.validations.bidComment.isValid(value);
+    }
+  }
 });
 
 BidSchema.set('toJSON', { versionKey: false });
+
+BidSchema.method('populateAll', function() {
+  return Bid.populate(this, bidPopulation);
+});
 
 export const Bid = model<IBidDocument>('Bid', BidSchema);

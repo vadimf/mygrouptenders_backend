@@ -6,5 +6,6 @@ export class Validations {
   public orderDescription = new Validation(0, 200);
   public providerProfileOverview = new Validation(0, 500);
   public providerReview = new Validation(0, 500);
+  public bidComment = new Validation(0, 200);
   public feedbackRating = new NumberValidation(0, 5);
 }
