@@ -16,7 +16,7 @@ export class OrderSearch extends SearchEngine<IOrderDocument, IOrderModel> {
     private conditions?: IOrderSearchConditions,
     private aggregationPipes?: any[]
   ) {
-    super(currentPage, 3);
+    super(currentPage);
   }
 
   protected getQueryConditions(): any {

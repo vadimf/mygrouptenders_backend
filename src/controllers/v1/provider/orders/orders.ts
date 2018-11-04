@@ -86,6 +86,10 @@ router
         throw AppError.ObjectDoesNotExist;
       }
 
+      if ((order.client as Types.ObjectId).equals(req.user._id)) {
+        throw AppError.ActionNotAllowed;
+      }
+
       const bid = new Bid({
         order: order._id,
         provider: req.user._id,

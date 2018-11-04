@@ -32,6 +32,10 @@ const upload = multer({
 });
 
 router
+
+  /*
+    Create new order
+   */
   .post(
     '/',
     asyncMiddleware(async (req: Request, res: Response) => {
@@ -52,6 +56,9 @@ router
     })
   )
 
+  /*
+    Query currently logged in user's orders
+   */
   .get(
     '/',
     validatePageParams(),
@@ -129,6 +136,9 @@ router
     })
   )
 
+  /*
+    Get order by ID
+   */
   .get(
     '/:id',
     [param('id').isMongoId()],
@@ -147,6 +157,9 @@ router
     })
   )
 
+  /*
+    Update order by ID
+   */
   .put(
     '/:id',
     [param('id').isMongoId()],
@@ -181,6 +194,9 @@ router
     })
   )
 
+  /*
+    Extend expiration date
+   */
   .patch(
     '/:id',
     [param('id').isMongoId()],
@@ -262,6 +278,9 @@ router
     })
   )
 
+  /*
+    Mark order as removed
+   */
   .delete(
     '/:id',
     [param('id').isMongoId()],
