@@ -16,7 +16,7 @@ export class OrderSearch extends SearchEngine<IOrderDocument, IOrderModel> {
     private conditions?: IOrderSearchConditions,
     private aggregationPipes?: any[]
   ) {
-    super(currentPage);
+    super(currentPage, 3);
   }
 
   protected getQueryConditions(): any {
@@ -35,12 +35,30 @@ export class OrderSearch extends SearchEngine<IOrderDocument, IOrderModel> {
   }
 
   public async aggregateResults() {
-    const results = (await this.model.aggregate(this.aggregationPipes)).map(
+    let pipelines = [
+      {
+        $match: this.getQueryConditions()
+      },
+      ...this.aggregationPipes
+    ];
+    if (!this.disablePagination) {
+      const pagination = await this.getPagination();
+
+      pipelines = [
+        ...pipelines,
+        {
+          $skip: pagination.offset
+        },
+        {
+          $limit: pagination.resultsPerPage
+        }
+      ];
+    }
+
+    const results = (await this.model.aggregate(pipelines)).map(
       (order: any) => new Order(order, false)
     );
 
     return await this.model.populateAll(results);
-
-    // return await this.model.aggregate(this.aggregationPipes);
   }
 }

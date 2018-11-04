@@ -8,7 +8,7 @@ import {
 } from '../../../../../node_modules/express-validator/check';
 import { AppError } from '../../../../models/app-error';
 import { AppErrorWithData } from '../../../../models/app-error-with-data';
-import { OrderStatus } from '../../../../models/enums';
+import { BidStatus, OrderStatus } from '../../../../models/enums';
 import { IOrderDocument, Order } from '../../../../models/order/order';
 import { OrderSearch } from '../../../../models/order/search';
 import asyncMiddleware, {
@@ -88,23 +88,43 @@ router
 
       const pipelines = [
         {
-          $match: conditions
-        },
-        {
           $lookup: {
             from: 'bids',
-            localField: '_id',
-            foreignField: 'order',
+            let: {
+              order_id: '$_id'
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$order', '$$order_id'] },
+                      { $eq: ['$status', BidStatus.Placed] }
+                    ]
+                  }
+                }
+              }
+            ],
             as: 'bids'
+          }
+        },
+        {
+          $addFields: {
+            minBid: {
+              $min: '$bids.bid'
+            },
+            bids: {
+              $size: '$bids'
+            }
           }
         }
       ];
 
-      const search = new OrderSearch(page || 1, null, pipelines);
+      const search = new OrderSearch(page || 1, conditions, pipelines);
 
       res.response({
-        orders: await search.aggregateResults()
-        // pagination: await search.getPagination()
+        orders: await search.aggregateResults(),
+        pagination: await search.getPagination()
       });
     })
   )
