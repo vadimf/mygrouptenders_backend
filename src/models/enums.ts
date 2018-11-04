@@ -6,3 +6,9 @@ export enum OrderStatus {
   Completed,
   Removed
 }
+
+export enum BidStatus {
+  Placed,
+  Rejected,
+  Approved
+}

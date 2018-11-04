@@ -74,7 +74,7 @@ router
 
       let conditions: any = {
         client: req.user._id,
-        status: { $not: { $eq: OrderStatus.Removed } }
+        status: { $ne: OrderStatus.Removed }
       };
 
       if (!!statuses) {
