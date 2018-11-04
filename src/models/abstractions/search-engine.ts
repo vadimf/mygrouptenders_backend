@@ -1,4 +1,4 @@
-import { Document, DocumentQuery, Model } from 'mongoose';
+import { Aggregate, Document, DocumentQuery, Model } from 'mongoose';
 
 import { Pagination } from '../pagination';
 
@@ -38,6 +38,8 @@ export abstract class SearchEngine<D extends Document, T extends Model<D>> {
    * @returns {Promise<DocumentQuery<D, D> | DocumentQuery<D[], D>>}
    */
   public abstract getResults(): Promise<D[]>;
+
+  public abstract aggregateResults(): Promise<any>;
 
   /**
    * Get pagination object (if pagination enabled)

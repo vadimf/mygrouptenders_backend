@@ -13,7 +13,8 @@ export class OrderSearch extends SearchEngine<IOrderDocument, IOrderModel> {
 
   constructor(
     currentPage: number,
-    private conditions?: IOrderSearchConditions
+    private conditions?: IOrderSearchConditions,
+    private aggregationPipes?: any[]
   ) {
     super(currentPage);
   }
@@ -31,5 +32,15 @@ export class OrderSearch extends SearchEngine<IOrderDocument, IOrderModel> {
     }
 
     return await query;
+  }
+
+  public async aggregateResults() {
+    const results = (await this.model.aggregate(this.aggregationPipes)).map(
+      (order: any) => new Order(order, false)
+    );
+
+    return await this.model.populateAll(results);
+
+    // return await this.model.aggregate(this.aggregationPipes);
   }
 }

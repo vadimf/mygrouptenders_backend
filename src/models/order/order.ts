@@ -36,6 +36,9 @@ export interface IOrderDocument extends Document {
 
 export interface IOrderModel extends Model<IOrderDocument> {
   get: (conditions: any) => DocumentQuery<IOrderDocument[], IOrderDocument>;
+  populateAll: (
+    docs: IOrderDocument | IOrderDocument[]
+  ) => Promise<IOrderDocument | IOrderDocument[]>;
 }
 
 export const orderPopulation: ModelPopulateOptions[] = [
@@ -134,6 +137,12 @@ OrderSchema.method('populateAll', function() {
 
 OrderSchema.static('get', function(conditions: any) {
   return Order.find(conditions).populate(orderPopulation);
+});
+
+OrderSchema.static('populateAll', function(
+  docs: IOrderDocument | IOrderDocument[]
+) {
+  return Order.populate(docs, orderPopulation);
 });
 
 export const Order = model<IOrderDocument, IOrderModel>('Order', OrderSchema);

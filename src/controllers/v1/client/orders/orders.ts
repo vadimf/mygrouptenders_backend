@@ -86,11 +86,25 @@ router
         };
       }
 
-      const search = new OrderSearch(page || 1, conditions);
+      const pipelines = [
+        {
+          $match: conditions
+        },
+        {
+          $lookup: {
+            from: 'bids',
+            localField: '_id',
+            foreignField: 'order',
+            as: 'bids'
+          }
+        }
+      ];
+
+      const search = new OrderSearch(page || 1, null, pipelines);
 
       res.response({
-        orders: await search.getResults(),
-        pagination: await search.getPagination()
+        orders: await search.aggregateResults()
+        // pagination: await search.getPagination()
       });
     })
   )
