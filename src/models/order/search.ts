@@ -1,17 +1,20 @@
-import { Types } from 'mongoose';
-
 import { SearchEngine } from '../abstractions/search-engine';
 import { IOrderDocument, IOrderModel, Order } from './order';
 
 export interface IOrderSearchConditions {
-  client: Types.ObjectId;
-  status: any;
+  client?: any;
+  status?: any;
+  categories?: any;
+  'address.area'?: any;
 }
 
 export class OrderSearch extends SearchEngine<IOrderDocument, IOrderModel> {
   protected model: IOrderModel = Order;
 
-  constructor(currentPage: number, private conditions: IOrderSearchConditions) {
+  constructor(
+    currentPage: number,
+    private conditions?: IOrderSearchConditions
+  ) {
     super(currentPage);
   }
 

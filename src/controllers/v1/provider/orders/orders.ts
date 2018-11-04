@@ -1,43 +1,108 @@
 import { Request, Response, Router } from 'express';
-import { param } from 'express-validator/check';
+import { body, param } from 'express-validator/check';
+import { Types } from 'mongoose';
 
 import { AppError } from '../../../../models/app-error';
 import { AppErrorWithData } from '../../../../models/app-error-with-data';
+import { IAreaDocument } from '../../../../models/area';
 import { Bid } from '../../../../models/bid';
+import { ICategoryDocument } from '../../../../models/category';
 import { Order } from '../../../../models/order/order';
-import asyncMiddleware from '../../../../utilities/async-middleware';
+import {
+  IOrderSearchConditions,
+  OrderSearch
+} from '../../../../models/order/search';
+import asyncMiddleware, {
+  validatePageParams
+} from '../../../../utilities/async-middleware';
 
 const router = Router();
 
-router.post(
-  '/:id/bid',
-  [param('id').isMongoId()],
-  asyncMiddleware(async (req: Request, res: Response) => {
-    req.validateRequest();
+router
 
-    const order = await Order.findById(req.params.id);
+  .post(
+    '/search',
+    validatePageParams(),
+    [
+      body('categories')
+        .optional()
+        .isArray(),
+      body('categories.*').isMongoId(),
+      body('areas')
+        .optional()
+        .isArray(),
+      body('areas.*').isMongoId()
+    ],
+    asyncMiddleware(async (req: Request, res: Response) => {
+      req.validateRequest();
 
-    if (!order) {
-      throw AppError.ObjectDoesNotExist;
-    }
+      const { page } = req.query;
+      const {
+        categories: savedCategories,
+        areas: savedAreas
+      } = req.user.provider;
+      const { categories: filterCategories, areas: filterAreas } = req.body;
 
-    const bid = new Bid({
-      order: order._id,
-      provider: req.user._id,
-      bid: req.body.bid,
-      comment: req.body.comment
-    });
+      const conditions: IOrderSearchConditions = {
+        client: {
+          $ne: req.user._id
+        },
+        categories: {
+          $in:
+            !!filterCategories && !!filterCategories.length
+              ? filterCategories.map((category: string) =>
+                  Types.ObjectId(category)
+                )
+              : savedCategories.map(
+                  (category: ICategoryDocument) => category._id
+                )
+        },
+        'address.area': {
+          $in:
+            !!filterAreas && !!filterAreas.length
+              ? filterAreas.map((area: string) => Types.ObjectId(area))
+              : savedAreas.map((area: IAreaDocument) => area._id)
+        }
+      };
 
-    try {
-      await bid.save();
-    } catch (e) {
-      throw new AppErrorWithData(AppError.RequestValidation, e);
-    }
+      const search = new OrderSearch(page || 1, conditions);
 
-    res.response({
-      bid: await bid.populateAll()
-    });
-  })
-);
+      res.response({
+        orders: await search.getResults(),
+        pagination: await search.getPagination()
+      });
+    })
+  )
+
+  .post(
+    '/:id/bid',
+    [param('id').isMongoId()],
+    asyncMiddleware(async (req: Request, res: Response) => {
+      req.validateRequest();
+
+      const order = await Order.findById(req.params.id);
+
+      if (!order) {
+        throw AppError.ObjectDoesNotExist;
+      }
+
+      const bid = new Bid({
+        order: order._id,
+        provider: req.user._id,
+        bid: req.body.bid,
+        comment: req.body.comment
+      });
+
+      try {
+        await bid.save();
+      } catch (e) {
+        throw new AppErrorWithData(AppError.RequestValidation, e);
+      }
+
+      res.status(201).response({
+        bid: await bid.populateAll()
+      });
+    })
+  );
 
 export default router;

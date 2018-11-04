@@ -125,12 +125,10 @@ router
 
         const token = await user.createAuthToken();
 
-        res.response({
+        res.status(201).response({
           user: user.selfUser(),
           token: token.authToken
         });
-
-        next();
       }
     )
   )

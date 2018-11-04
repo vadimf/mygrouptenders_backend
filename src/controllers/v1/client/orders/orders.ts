@@ -46,7 +46,7 @@ router
         throw new AppErrorWithData(AppError.RequestValidation, e);
       }
 
-      res.response({
+      res.status(201).response({
         order: await order.populateAll()
       });
     })
