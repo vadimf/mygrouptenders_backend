@@ -1,9 +1,22 @@
-import { Document, model, ModelPopulateOptions, Schema, Types } from 'mongoose';
+import {
+  Document,
+  DocumentQuery,
+  Model,
+  model,
+  ModelPopulateOptions,
+  Schema,
+  Types
+} from 'mongoose';
 
-import { BidStatus } from './enums';
-import { IOrderDocument, orderPopulation } from './order/order';
-import { SystemConfiguration } from './system-configuration';
-import { IUserDocument } from './user/user';
+import { BidStatus } from '../enums';
+import { IOrderDocument, orderPopulation } from '../order/order';
+import { SystemConfiguration } from '../system-configuration';
+import { IUserDocument } from '../user/user';
+
+export interface IBidSearchConditions {
+  order?: any;
+  status?: any;
+}
 
 export interface IBidDocument extends Document {
   order: Types.ObjectId | IOrderDocument;
@@ -14,6 +27,12 @@ export interface IBidDocument extends Document {
   comment: string;
 
   populateAll(): Promise<IBidDocument>;
+}
+
+export interface IBidModel extends Model<IBidDocument> {
+  get: (
+    conditions: IBidSearchConditions
+  ) => DocumentQuery<IBidDocument[], IBidDocument>;
 }
 
 export const bidPopulation: ModelPopulateOptions[] = [
@@ -66,4 +85,8 @@ BidSchema.method('populateAll', function() {
   return Bid.populate(this, bidPopulation);
 });
 
-export const Bid = model<IBidDocument>('Bid', BidSchema);
+BidSchema.static('get', function(conditions: IBidSearchConditions) {
+  return Bid.find(conditions).populate(bidPopulation);
+});
+
+export const Bid = model<IBidDocument, IBidModel>('Bid', BidSchema);

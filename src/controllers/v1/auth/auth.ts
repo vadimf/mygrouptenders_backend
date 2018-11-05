@@ -24,7 +24,7 @@ router
     asyncMiddleware(async (req: express.Request, res: express.Response) => {
       req.validateRequest();
 
-      const phone: IPhoneNumberDocument = (req as any).phone;
+      const phone: IPhoneNumberDocument = req.locals.phone;
 
       const user = await User.getSingle({
         'phone.prefix': phone.prefix,
@@ -52,7 +52,7 @@ router
     '/send-sms',
     ...getPhoneNumberFromRequest(),
     asyncMiddleware(async (req: express.Request, res: express.Response) => {
-      const phoneNumber: IPhoneNumberDocument = (req as any).phone;
+      const phoneNumber: IPhoneNumberDocument = req.locals.phone;
 
       const code =
         process.env.ENV === 'DEV'
@@ -103,7 +103,7 @@ router
         req.validateRequest();
 
         const { fullName } = req.body;
-        const phone: IPhoneNumberDocument = (req as any).phone;
+        const phone: IPhoneNumberDocument = req.locals.phone;
 
         let user = await User.getSingle({
           'phone.prefix': phone.prefix,

@@ -1,12 +1,10 @@
 import { SearchEngine } from '../abstractions/search-engine';
-import { IOrderDocument, IOrderModel, Order } from './order';
-
-export interface IOrderSearchConditions {
-  client?: any;
-  status?: any;
-  categories?: any;
-  'address.area'?: any;
-}
+import {
+  IOrderDocument,
+  IOrderModel,
+  IOrderSearchConditions,
+  Order
+} from './order';
 
 export class OrderSearch extends SearchEngine<IOrderDocument, IOrderModel> {
   protected model: IOrderModel = Order;
@@ -19,7 +17,7 @@ export class OrderSearch extends SearchEngine<IOrderDocument, IOrderModel> {
     super(currentPage);
   }
 
-  protected getQueryConditions(): any {
+  protected getQueryConditions() {
     return this.conditions;
   }
 

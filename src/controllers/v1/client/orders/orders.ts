@@ -19,6 +19,7 @@ import {
   IStorageUploadingResults,
   StorageManager
 } from '../../../../utilities/storage-manager';
+import BidsRouter from './bids';
 
 export const MAX_ORDERS_VIDEOS = 1;
 
@@ -305,6 +306,23 @@ router
 
       res.response();
     })
+  )
+
+  .use(
+    '/:id/bids',
+    [param('id').isMongoId()],
+    asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+      req.validateRequest();
+
+      req.locals.order = await Order.findById(req.params.id);
+
+      if (!req.locals.order) {
+        throw AppError.ObjectDoesNotExist;
+      }
+
+      next();
+    }),
+    BidsRouter
   );
 
 export default router;

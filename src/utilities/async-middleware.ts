@@ -39,7 +39,7 @@ export function getPhoneNumberFromRequest() {
     asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
       req.validateRequest();
 
-      (req as any).phone = new PhoneNumber({
+      req.locals.phone = new PhoneNumber({
         prefix: req.body.phone.prefix,
         number: req.body.phone.number
       });
@@ -93,7 +93,7 @@ export function checkPhoneNumberConfirmationRequest() {
     asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
       req.validateRequest();
 
-      const phoneNumber: IPhoneNumberDocument = (req as any).phone;
+      const phoneNumber: IPhoneNumberDocument = req.locals.phone;
       const code = String(req.body.code || '');
 
       const phoneConfirmationRequests = await PhoneConfirmationRequest.findOne({

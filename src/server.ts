@@ -87,6 +87,9 @@ app.use(
       req.method = req.body._method;
     }
 
+    // Init custom data storage
+    req.locals = {};
+
     next();
   }
 );

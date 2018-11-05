@@ -5,13 +5,10 @@ import { Types } from 'mongoose';
 import { AppError } from '../../../../models/app-error';
 import { AppErrorWithData } from '../../../../models/app-error-with-data';
 import { IAreaDocument } from '../../../../models/area';
-import { Bid } from '../../../../models/bid';
+import { Bid } from '../../../../models/bid/bid';
 import { ICategoryDocument } from '../../../../models/category';
-import { Order } from '../../../../models/order/order';
-import {
-  IOrderSearchConditions,
-  OrderSearch
-} from '../../../../models/order/search';
+import { IOrderSearchConditions, Order } from '../../../../models/order/order';
+import { OrderSearch } from '../../../../models/order/search';
 import asyncMiddleware, {
   validatePageParams
 } from '../../../../utilities/async-middleware';
@@ -53,15 +50,15 @@ router
               ? filterCategories.map((category: string) =>
                   Types.ObjectId(category)
                 )
-              : savedCategories.map(
-                  (category: ICategoryDocument) => category._id
+              : (savedCategories as ICategoryDocument[]).map(
+                  (category) => category._id
                 )
         },
         'address.area': {
           $in:
             !!filterAreas && !!filterAreas.length
               ? filterAreas.map((area: string) => Types.ObjectId(area))
-              : savedAreas.map((area: IAreaDocument) => area._id)
+              : (savedAreas as IAreaDocument[]).map((area) => area._id)
         }
       };
 

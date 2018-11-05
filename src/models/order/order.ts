@@ -10,13 +10,20 @@ import {
 } from 'mongoose';
 
 import { AddressSchema, IAddressDocument } from '../address';
-import { IBidDocument } from '../bid';
+import { IBidDocument } from '../bid/bid';
 import { ICategoryDocument } from '../category';
 import { OrderStatus } from '../enums';
 import { FileSchema, IFileDocument } from '../file';
 import { IUserDocument } from '../user/user';
 
 export const MIN_PROLONGATION_HOURS = 12;
+
+export interface IOrderSearchConditions {
+  client?: any;
+  status?: any;
+  categories?: any;
+  'address.area'?: any;
+}
 
 export interface IOrderDocument extends Document {
   expirationDate: Date;
@@ -35,7 +42,9 @@ export interface IOrderDocument extends Document {
 }
 
 export interface IOrderModel extends Model<IOrderDocument> {
-  get: (conditions: any) => DocumentQuery<IOrderDocument[], IOrderDocument>;
+  get: (
+    conditions: IOrderSearchConditions
+  ) => DocumentQuery<IOrderDocument[], IOrderDocument>;
   populateAll: (
     docs: IOrderDocument | IOrderDocument[]
   ) => Promise<IOrderDocument | IOrderDocument[]>;
@@ -135,7 +144,7 @@ OrderSchema.method('populateAll', function() {
   return Order.populate(this, orderPopulation);
 });
 
-OrderSchema.static('get', function(conditions: any) {
+OrderSchema.static('get', function(conditions: IOrderSearchConditions) {
   return Order.find(conditions).populate(orderPopulation);
 });
 

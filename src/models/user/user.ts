@@ -15,7 +15,7 @@ import {
 } from './authentication-token';
 import { IPhoneNumberDocument, PhoneNumberSchema } from './phone-number';
 import { IProfileDocument, ProfileSchema } from './profile';
-import { ProviderSchema } from './provider';
+import { IProviderDocument, ProviderSchema } from './provider';
 
 export interface IUserDocument extends Document {
   profile: IProfileDocument;
@@ -23,7 +23,7 @@ export interface IUserDocument extends Document {
   tokens: IAuthenticationTokenDocument[];
   blockDate: Date;
   blocked: boolean;
-  provider?: IProfileDocument;
+  provider?: IProviderDocument;
 
   createAuthToken(): IAuthenticationTokenDocument;
   block(block: boolean): Query<IUserDocument>;

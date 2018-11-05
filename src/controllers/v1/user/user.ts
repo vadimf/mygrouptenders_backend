@@ -32,7 +32,7 @@ router
         middlewares = middlewares.concat([
           ...getPhoneNumberFromRequest(),
           function() {
-            if (!req.user.phone.compare(req.phone)) {
+            if (!req.user.phone.compare(req.locals.phone)) {
               dynamicMiddlewares(
                 checkPhoneNumberConfirmationRequest(),
                 req,

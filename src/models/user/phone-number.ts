@@ -5,7 +5,7 @@ export interface IPhoneNumberDocument extends Document {
   number: string;
 
   toDisplay(): string;
-  compare(): boolean;
+  compare(phone: IPhoneNumberDocument): boolean;
 }
 
 export const PhoneNumberSchema = new Schema(
