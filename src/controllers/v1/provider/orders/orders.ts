@@ -17,6 +17,9 @@ const router = Router();
 
 router
 
+  /**
+   * Query orders
+   */
   .post(
     '/search',
     validatePageParams(),
@@ -93,7 +96,7 @@ router
       });
 
       if (!!existingBid) {
-        throw AppError.ObjectExist;
+        throw AppError.ObjectExists;
       }
 
       const bid = new Bid({

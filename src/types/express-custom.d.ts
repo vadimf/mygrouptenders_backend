@@ -1,3 +1,4 @@
+import { IBidDocument } from '../models/bid/bid';
 import { IOrderDocument } from '../models/order/order';
 import { IAuthenticationTokenDocument } from '../models/user/authentication-token';
 import { IPhoneNumberDocument } from '../models/user/phone-number';
@@ -14,6 +15,7 @@ declare global {
       locals: {
         phone?: IPhoneNumberDocument;
         order?: IOrderDocument;
+        bid?: IBidDocument;
       };
       mobileDevice(): boolean;
     }

@@ -37,10 +37,10 @@ export class AppError {
     200,
     "Object doesn't exist"
   );
-  public static ObjectExist = new AppError(
+  public static ObjectExists = new AppError(
     StatusCode.Conflict,
     202,
-    'Object already exist'
+    'Object already exists'
   );
   public static NotAuthenticated = new AppError(
     StatusCode.Unauthorized,

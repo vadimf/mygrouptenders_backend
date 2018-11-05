@@ -111,7 +111,7 @@ router
         });
 
         if (!!user) {
-          throw AppError.ObjectExist;
+          throw AppError.ObjectExists;
         }
 
         user = new User({

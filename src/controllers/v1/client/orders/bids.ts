@@ -1,4 +1,4 @@
-import { Request, Response, Router } from 'express';
+import { NextFunction, Request, Response, Router } from 'express';
 import { param } from 'express-validator/check';
 import { Types } from 'mongoose';
 
@@ -44,23 +44,32 @@ router
 
   .route('/:id')
   /**
-   * Accept bid
+   * Check for bid existence
    */
-  .patch(
+  .all(
     [param('id').isMongoId()],
-    asyncMiddleware(async (req: Request, res: Response) => {
+    asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
       req.validateRequest();
 
-      const { order } = req.locals;
-
-      if (order.status !== OrderStatus.Placed) {
-        throw AppError.ActionNotAllowed;
-      }
-
-      const bid: IBidDocument = await Bid.findById(req.params.id);
+      const bid = (req.locals.bid = await Bid.findById(req.params.id));
 
       if (!bid) {
         throw AppError.ObjectDoesNotExist;
+      }
+
+      next();
+    })
+  )
+
+  /**
+   * Accept bid
+   */
+  .patch(
+    asyncMiddleware(async (req: Request, res: Response) => {
+      const { order, bid } = req.locals;
+
+      if (order.status !== OrderStatus.Placed) {
+        throw AppError.ActionNotAllowed;
       }
 
       if (!(bid.order as Types.ObjectId).equals(order._id)) {
@@ -79,6 +88,30 @@ router
       res.response({
         bid: await bid.populateAll()
       });
+    })
+  )
+
+  /**
+   * Reject bid
+   */
+  .delete(
+    asyncMiddleware(async (req: Request, res: Response) => {
+      const { order, bid } = req.locals;
+
+      if (!(bid.order as Types.ObjectId).equals(order._id)) {
+        throw AppError.ActionNotAllowed;
+      }
+
+      bid.status = BidStatus.Rejected;
+
+      order.status = OrderStatus.Placed;
+      order.approvedBid = null;
+
+      await Promise.all([bid.save(), order.save()]);
+
+      // TODO send notification
+
+      res.response();
     })
   );
 
