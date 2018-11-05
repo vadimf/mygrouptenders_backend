@@ -33,30 +33,6 @@ const upload = multer({
 });
 
 router
-
-  /*
-    Create new order
-   */
-  .post(
-    '/',
-    asyncMiddleware(async (req: Request, res: Response) => {
-      const order = new Order({
-        client: req.user._id,
-        ...req.body
-      });
-
-      try {
-        await order.save();
-      } catch (e) {
-        throw new AppErrorWithData(AppError.RequestValidation, e);
-      }
-
-      res.status(201).response({
-        order: await order.populateAll()
-      });
-    })
-  )
-
   /*
     Query currently logged in user's orders
    */
@@ -138,19 +114,40 @@ router
   )
 
   /*
+    Create new order
+   */
+  .post(
+    '/',
+    asyncMiddleware(async (req: Request, res: Response) => {
+      const order = new Order({
+        client: req.user._id,
+        ...req.body
+      });
+
+      try {
+        await order.save();
+      } catch (e) {
+        throw new AppErrorWithData(AppError.RequestValidation, e);
+      }
+
+      res.status(201).response({
+        order: await order.populateAll()
+      });
+    })
+  )
+
+  .route('/:id')
+  /**
+   * Check for order existence
+   */
+  .all(...checkIfOrderExists())
+
+  /*
     Get order by ID
    */
   .get(
-    '/:id',
-    [param('id').isMongoId()],
     asyncMiddleware(async (req: Request, res: Response) => {
-      req.validateRequest();
-
-      const order = await Order.findById(req.params.id);
-
-      if (!order) {
-        throw AppError.ObjectDoesNotExist;
-      }
+      const order = req.locals.order;
 
       res.response({
         order: await order.populateAll()
@@ -158,25 +155,18 @@ router
     })
   )
 
+  /**
+   * Check if user is authenticated for interaction
+   */
+  .all(checkIfUserAuthenticated())
+
   /*
     Update order by ID
    */
   .put(
-    '/:id',
-    [param('id').isMongoId()],
     asyncMiddleware(async (req: Request, res: Response) => {
-      req.validateRequest();
-
       const body: Partial<IOrderDocument> = req.body;
-      const order = await Order.findById(req.params.id);
-
-      if (!order) {
-        throw AppError.ObjectDoesNotExist;
-      }
-
-      if (!(order.client as Types.ObjectId).equals(req.user._id)) {
-        throw AppError.ActionNotAllowed;
-      }
+      const order = req.locals.order;
 
       delete body.status;
       delete body.expirationDate;
@@ -199,21 +189,9 @@ router
     Extend expiration date
    */
   .patch(
-    '/:id',
-    [param('id').isMongoId()],
     asyncMiddleware(async (req: Request, res: Response) => {
-      req.validateRequest();
-
       const { expirationDate } = req.body;
-      const order = await Order.findById(req.params.id);
-
-      if (!order) {
-        throw AppError.ObjectDoesNotExist;
-      }
-
-      if (!(order.client as Types.ObjectId).equals(req.user._id)) {
-        throw AppError.ActionNotAllowed;
-      }
+      const order = req.locals.order;
 
       order.set({ expirationDate });
 
@@ -229,16 +207,32 @@ router
     })
   )
 
+  /*
+    Mark order as removed
+   */
+  .delete(
+    asyncMiddleware(async (req: Request, res: Response) => {
+      req.validateRequest();
+
+      const order = req.locals.order;
+
+      if (order.status === OrderStatus.InProgress) {
+        // TODO send notification to provider
+      }
+
+      await order.update({ status: OrderStatus.Removed });
+
+      res.response();
+    })
+  );
+
+router
   .post(
     '/:id/upload-media',
-    [param('id').isMongoId()],
+    ...checkIfOrderExists(),
     upload.array('files', 6),
     asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
-      const order = await Order.findById(req.params.id);
-
-      if (!order) {
-        throw AppError.ObjectDoesNotExist;
-      }
+      const order = req.locals.order;
 
       const files = req.files as Express.Multer.File[];
       const storageManager = new StorageManager();
@@ -279,50 +273,42 @@ router
     })
   )
 
-  /*
-    Mark order as removed
-   */
-  .delete(
-    '/:id',
+  .use(
+    '/:id/bids',
+    ...checkIfOrderExists(),
+    checkIfUserAuthenticated(),
+    BidsRouter
+  );
+
+function checkIfOrderExists() {
+  return [
     [param('id').isMongoId()],
-    asyncMiddleware(async (req: Request, res: Response) => {
+    asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
       req.validateRequest();
 
-      const order = await Order.findById(req.params.id);
+      const order = (req.locals.order = await Order.findById(req.params.id));
 
       if (!order) {
         throw AppError.ObjectDoesNotExist;
       }
 
-      if (!(order.client as Types.ObjectId).equals(req.user._id)) {
-        throw AppError.ActionNotAllowed;
-      }
-
-      if (order.status === OrderStatus.InProgress) {
-        // TODO send notification to provider
-      }
-
-      await order.update({ status: OrderStatus.Removed });
-
-      res.response();
+      next();
     })
-  )
+  ];
+}
 
-  .use(
-    '/:id/bids',
-    [param('id').isMongoId()],
-    asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
-      req.validateRequest();
+function checkIfUserAuthenticated() {
+  return asyncMiddleware(
+    async (req: Request, res: Response, next: NextFunction) => {
+      const order = req.locals.order;
 
-      req.locals.order = await Order.findById(req.params.id);
-
-      if (!req.locals.order) {
-        throw AppError.ObjectDoesNotExist;
+      if (!(order.client as Types.ObjectId).equals(req.user._id)) {
+        throw AppError.NotAuthenticated;
       }
 
       next();
-    }),
-    BidsRouter
+    }
   );
+}
 
 export default router;

@@ -63,6 +63,10 @@ router
         throw AppError.ObjectDoesNotExist;
       }
 
+      if (!(bid.order as Types.ObjectId).equals(order._id)) {
+        throw AppError.ActionNotAllowed;
+      }
+
       bid.status = BidStatus.Approved;
 
       order.status = OrderStatus.InProgress;
