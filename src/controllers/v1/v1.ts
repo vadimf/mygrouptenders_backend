@@ -1,6 +1,6 @@
 import * as express from 'express';
 
-import { isUserAuthenticated } from '../../config/passport';
+import { isProvider, isUserAuthenticated } from '../../config/passport';
 import AuthRouter from './auth/auth';
 import ClientRouter from './client/client';
 import AreasRouter from './common/areas';
@@ -24,7 +24,7 @@ router.use('/languages', LanguagesRouter);
 router.use('/auth', AuthRouter);
 router.use('/user', isUserAuthenticated(), UserRouter);
 router.use('/client', isUserAuthenticated(), ClientRouter);
-router.use('/provider', isUserAuthenticated(), ProviderRouter);
+router.use('/provider', isUserAuthenticated(), isProvider(), ProviderRouter);
 router.use('/categories', isUserAuthenticated(), CategoriesRouter);
 router.use('/areas', isUserAuthenticated(), AreasRouter);
 

@@ -1,6 +1,6 @@
-import * as express from 'express';
+import { NextFunction, Request, Response } from 'express';
+
 import { AppError } from '../models/app-error';
-import { Administrator } from '../models/user/administrator';
 import { IAuthenticationTokenDocument } from '../models/user/authentication-token';
 import { User } from '../models/user/user';
 import asyncMiddleware from '../utilities/async-middleware';
@@ -12,11 +12,7 @@ import asyncMiddleware from '../utilities/async-middleware';
  */
 export function isUserAuthenticated() {
   return asyncMiddleware(
-    async (
-      req: express.Request,
-      res: express.Response,
-      next: express.NextFunction
-    ) => {
+    async (req: Request, res: Response, next: NextFunction) => {
       let authToken: string = req.header('x-authorization');
 
       if (!authToken) {
@@ -47,4 +43,14 @@ export function isUserAuthenticated() {
       throw AppError.NotAuthenticated;
     }
   );
+}
+
+export function isProvider() {
+  return function(req: Request, res: Response, next: NextFunction) {
+    if (!req.user || !req.user.provider) {
+      throw AppError.NotAuthenticated;
+    }
+
+    next();
+  };
 }

@@ -38,7 +38,10 @@ export interface IBidModel extends Model<IBidDocument> {
 export const bidPopulation: ModelPopulateOptions[] = [
   {
     path: 'provider',
-    populate: [{ path: 'provider.categories', populate: [{ path: 'parent' }] }]
+    populate: [
+      { path: 'provider.categories', populate: [{ path: 'parent' }] },
+      { path: 'provider.areas', populate: [{ path: 'parent' }] }
+    ]
   }
 ];
 

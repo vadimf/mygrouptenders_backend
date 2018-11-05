@@ -87,6 +87,15 @@ router
         throw AppError.ActionNotAllowed;
       }
 
+      const existingBid = await Bid.findOne({
+        order: order._id,
+        provider: req.user._id
+      });
+
+      if (!!existingBid) {
+        throw AppError.ObjectExist;
+      }
+
       const bid = new Bid({
         order: order._id,
         provider: req.user._id,
