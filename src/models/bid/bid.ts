@@ -36,8 +36,10 @@ export interface IBidModel extends Model<IBidDocument> {
 }
 
 export const bidPopulation: ModelPopulateOptions[] = [
-  { path: 'order', populate: orderPopulation },
-  { path: 'provider' }
+  {
+    path: 'provider',
+    populate: [{ path: 'provider.categories', populate: [{ path: 'parent' }] }]
+  }
 ];
 
 export const BidSchema = new Schema(

@@ -1,8 +1,11 @@
 import { Request, Response, Router } from 'express';
+import { param } from 'express-validator/check';
 import { Types } from 'mongoose';
 
+import { AppError } from '../../../../models/app-error';
+import { Bid, IBidDocument } from '../../../../models/bid/bid';
 import { BidSearch } from '../../../../models/bid/search';
-import { BidStatus } from '../../../../models/enums';
+import { BidStatus, OrderStatus } from '../../../../models/enums';
 import { IOrderDocument } from '../../../../models/order/order';
 import asyncMiddleware, {
   validatePageParams
@@ -14,9 +17,8 @@ router
   /*
     Get order's bids
   */
-  .route('/')
-
   .get(
+    '/',
     validatePageParams(),
     asyncMiddleware(async (req: Request, res: Response) => {
       req.validateRequest();
@@ -36,6 +38,42 @@ router
       res.response({
         bids: await search.getResults(),
         pagination: await search.getPagination()
+      });
+    })
+  )
+
+  .route('/:id')
+  /**
+   * Accept bid
+   */
+  .patch(
+    [param('id').isMongoId()],
+    asyncMiddleware(async (req: Request, res: Response) => {
+      req.validateRequest();
+
+      const { order } = req.locals;
+
+      if (order.status !== OrderStatus.Placed) {
+        throw AppError.ActionNotAllowed;
+      }
+
+      const bid: IBidDocument = await Bid.findById(req.params.id);
+
+      if (!bid) {
+        throw AppError.ObjectDoesNotExist;
+      }
+
+      bid.status = BidStatus.Approved;
+
+      order.status = OrderStatus.InProgress;
+      order.approvedBid = bid._id;
+
+      await Promise.all([bid.save(), order.save()]);
+
+      // TODO send notification
+
+      res.response({
+        bid: await bid.populateAll()
       });
     })
   );
