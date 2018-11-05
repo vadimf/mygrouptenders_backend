@@ -10,7 +10,7 @@ import {
 } from 'mongoose';
 
 import { AddressSchema, IAddressDocument } from '../address';
-import { IBidDocument } from '../bid/bid';
+import { bidPopulation, IBidDocument } from '../bid/bid';
 import { ICategoryDocument } from '../category';
 import { OrderStatus } from '../enums';
 import { FileSchema, IFileDocument } from '../file';
@@ -52,6 +52,7 @@ export interface IOrderModel extends Model<IOrderDocument> {
 
 export const orderPopulation: ModelPopulateOptions[] = [
   { path: 'client' },
+  { path: 'approvedBid', populate: bidPopulation },
   { path: 'address.area', populate: { path: 'parent' } },
   { path: 'categories', populate: { path: 'parent' } }
 ];

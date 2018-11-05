@@ -3,13 +3,14 @@ import { Types } from 'mongoose';
 import multer = require('multer');
 
 import { AppError } from '../../../models/app-error';
-import { IProfileDocument } from '../../../models/user/profile';
 import { User } from '../../../models/user/user';
 import asyncMiddleware, {
   checkPhoneNumberConfirmationRequest,
   dynamicMiddlewares,
   getPhoneNumberFromRequest
 } from '../../../utilities/async-middleware';
+import { MimeType } from '../../../utilities/mime-type';
+import { StorageManager } from '../../../utilities/storage-manager';
 
 const router = Router();
 const storage = multer.memoryStorage();
@@ -70,20 +71,16 @@ router
   .put(
     upload.single('file'),
     asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
-      // (req.checkBody('file', 'Uploaded file is not an image, file name extension must contain one of the following extensions: .jpg, .jpeg, .png') as any).isImage(req.file);
+      const file = req.file;
+      const storageManager = new StorageManager();
 
-      await req.validateRequest();
+      const uploadedFile = await storageManager
+        .directory('users/' + req.user._id)
+        .fromBuffer(file.buffer, {
+          allowedMimeTypes: [MimeType.IMAGE_JPEG, MimeType.IMAGE_PNG]
+        });
 
-      req.setTimeout(0, null);
-
-      if (!req.user.profile) {
-        req.user.profile = {} as IProfileDocument;
-      }
-
-      // const profilePictureUploader = new UploadProfilePicture(req.user._id.toString());
-      // profilePictureUploader.buffer = req.file.buffer;
-
-      // req.user.profile.picture = await profilePictureUploader.uploadUserProfilePicture();
+      req.user.profile.set('picture', uploadedFile);
 
       next();
     }),
@@ -96,34 +93,6 @@ router
 
     next();
   }, respondWithUserObject());
-
-router.put(
-  '/profile-picture/base64',
-  upload.single('file'),
-  asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
-    // (req.checkBody("file", "Uploaded file is not an image, file name extension must contain one of the following extensions: .jpg, .jpeg, .png") as any).isImage(req.file);
-    // req.checkBody('file', 'Base64 is invalid').isBase64();
-
-    await req.validateRequest();
-
-    req.setTimeout(0, null);
-
-    if (!req.user.profile) {
-      req.user.profile = {} as IProfileDocument;
-    }
-
-    // const profilePictureUploader = new UploadProfilePicture(req.user._id.toString());
-    // profilePictureUploader.buffer = Buffer.from(
-    //     String(req.body.file || ''),
-    //     'base64',
-    // );
-
-    // req.user.profile.picture = await profilePictureUploader.uploadUserProfilePicture();
-
-    next();
-  }),
-  respondWithUserObject()
-);
 
 router.get(
   '/:id',
