@@ -13,6 +13,7 @@ import { BidStatus, OrderStatus } from '../../../../models/enums';
 import { IOrderDocument, Order } from '../../../../models/order/order';
 import { OrderSearch } from '../../../../models/order/search';
 import asyncMiddleware, {
+  sanitizeQueryToArray,
   validatePageParams
 } from '../../../../utilities/async-middleware';
 import { MimeType } from '../../../../utilities/mime-type';
@@ -41,15 +42,7 @@ router
     '/',
     validatePageParams(),
     [
-      (req: Request, res: Response, next: NextFunction) => {
-        const status = req.query.statuses;
-
-        if (!!status && !Array.isArray(status)) {
-          req.query.statuses = [status];
-        }
-
-        next();
-      },
+      sanitizeQueryToArray('status'),
       query('status.*').isIn(Object.values(OrderStatus))
     ],
     asyncMiddleware(async (req: Request, res: Response) => {

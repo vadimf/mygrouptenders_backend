@@ -2,17 +2,17 @@ import { Request, Response, Router } from 'express';
 import { body, param } from 'express-validator/check';
 import { Types } from 'mongoose';
 
-import { AppError } from '../../../../models/app-error';
-import { AppErrorWithData } from '../../../../models/app-error-with-data';
-import { IAreaDocument } from '../../../../models/area';
-import { Bid } from '../../../../models/bid/bid';
-import { ICategoryDocument } from '../../../../models/category';
-import { OrderStatus } from '../../../../models/enums';
-import { IOrderSearchConditions, Order } from '../../../../models/order/order';
-import { OrderSearch } from '../../../../models/order/search';
+import { AppError } from '../../../models/app-error';
+import { AppErrorWithData } from '../../../models/app-error-with-data';
+import { IAreaDocument } from '../../../models/area';
+import { Bid } from '../../../models/bid/bid';
+import { ICategoryDocument } from '../../../models/category';
+import { OrderStatus } from '../../../models/enums';
+import { IOrderSearchConditions, Order } from '../../../models/order/order';
+import { OrderSearch } from '../../../models/order/search';
 import asyncMiddleware, {
   validatePageParams
-} from '../../../../utilities/async-middleware';
+} from '../../../utilities/async-middleware';
 
 const router = Router();
 

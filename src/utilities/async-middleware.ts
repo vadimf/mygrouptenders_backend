@@ -21,6 +21,18 @@ export function validatePageParams() {
   ];
 }
 
+export function sanitizeQueryToArray(queryParam: string) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const param = req.query[queryParam];
+
+    if (!!param && !Array.isArray(param)) {
+      req.query[queryParam] = [param];
+    }
+
+    next();
+  };
+}
+
 export function getPhoneNumberFromRequest() {
   return [
     [

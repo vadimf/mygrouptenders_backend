@@ -16,6 +16,8 @@ import { IUserDocument } from '../user/user';
 export interface IBidSearchConditions {
   order?: any;
   status?: any;
+  provider?: any;
+  archived?: any;
 }
 
 export interface IBidDocument extends Document {
@@ -32,7 +34,8 @@ export interface IBidDocument extends Document {
 
 export interface IBidModel extends Model<IBidDocument> {
   get: (
-    conditions: IBidSearchConditions
+    conditions: IBidSearchConditions,
+    population?: ModelPopulateOptions[]
   ) => DocumentQuery<IBidDocument[], IBidDocument>;
 }
 
@@ -95,8 +98,11 @@ BidSchema.method('populateAll', function() {
   return Bid.populate(this, bidPopulation);
 });
 
-BidSchema.static('get', function(conditions: IBidSearchConditions) {
-  return Bid.find(conditions).populate(bidPopulation);
+BidSchema.static('get', function(
+  conditions: IBidSearchConditions,
+  population?: ModelPopulateOptions[]
+) {
+  return Bid.find(conditions).populate(population || bidPopulation);
 });
 
 export const Bid = model<IBidDocument, IBidModel>('Bid', BidSchema);

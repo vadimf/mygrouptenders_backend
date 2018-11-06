@@ -1,3 +1,5 @@
+import { ModelPopulateOptions } from 'mongoose';
+
 import { SearchEngine } from '../abstractions/search-engine';
 import { Bid, IBidDocument, IBidModel, IBidSearchConditions } from './bid';
 
@@ -12,8 +14,8 @@ export class BidSearch extends SearchEngine<IBidDocument, IBidModel> {
     return this.conditions;
   }
 
-  public async getResults() {
-    let query = this.model.get(this.getQueryConditions());
+  public async getResults(population?: ModelPopulateOptions[]) {
+    let query = this.model.get(this.getQueryConditions(), population);
 
     if (!this.disablePagination) {
       const pagination = await this.getPagination();
