@@ -4,11 +4,15 @@ export enum OrderStatus {
   Placed,
   InProgress,
   Completed,
-  Removed
+  Removed,
+  TerminatedByClient
 }
 
 export enum BidStatus {
   Placed,
   Rejected,
-  Approved
+  Approved,
+  TerminatedByClient,
+  TerminatedByProvider,
+  Removed
 }

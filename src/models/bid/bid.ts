@@ -9,7 +9,7 @@ import {
 } from 'mongoose';
 
 import { BidStatus } from '../enums';
-import { IOrderDocument, orderPopulation } from '../order/order';
+import { IOrderDocument } from '../order/order';
 import { SystemConfiguration } from '../system-configuration';
 import { IUserDocument } from '../user/user';
 
@@ -22,6 +22,7 @@ export interface IBidDocument extends Document {
   order: Types.ObjectId | IOrderDocument;
   provider: Types.ObjectId | IUserDocument;
   status: BidStatus;
+  archived: boolean;
   bid: number;
   prevBids: number[];
   comment: string;
@@ -60,6 +61,10 @@ export const BidSchema = new Schema(
     status: {
       type: Schema.Types.Number,
       default: BidStatus.Placed
+    },
+    archived: {
+      type: Boolean,
+      default: false
     },
     bid: {
       type: Schema.Types.Number,

@@ -7,6 +7,7 @@ import { AppErrorWithData } from '../../../../models/app-error-with-data';
 import { IAreaDocument } from '../../../../models/area';
 import { Bid } from '../../../../models/bid/bid';
 import { ICategoryDocument } from '../../../../models/category';
+import { OrderStatus } from '../../../../models/enums';
 import { IOrderSearchConditions, Order } from '../../../../models/order/order';
 import { OrderSearch } from '../../../../models/order/search';
 import asyncMiddleware, {
@@ -86,7 +87,10 @@ router
         throw AppError.ObjectDoesNotExist;
       }
 
-      if ((order.client as Types.ObjectId).equals(req.user._id)) {
+      if (
+        (order.client as Types.ObjectId).equals(req.user._id) ||
+        order.status !== OrderStatus.Placed
+      ) {
         throw AppError.ActionNotAllowed;
       }
 

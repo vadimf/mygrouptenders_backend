@@ -8,6 +8,7 @@ import {
 } from '../../../../../node_modules/express-validator/check';
 import { AppError } from '../../../../models/app-error';
 import { AppErrorWithData } from '../../../../models/app-error-with-data';
+import { Bid } from '../../../../models/bid/bid';
 import { BidStatus, OrderStatus } from '../../../../models/enums';
 import { IOrderDocument, Order } from '../../../../models/order/order';
 import { OrderSearch } from '../../../../models/order/search';
@@ -215,12 +216,51 @@ router
       req.validateRequest();
 
       const order = req.locals.order;
+      let orderStatus;
+      let bidsUpdatePromise;
 
-      if (order.status === OrderStatus.InProgress) {
-        // TODO send notification to provider
+      // TODO notification
+
+      switch (order.status) {
+        case OrderStatus.Placed:
+          orderStatus = {
+            status: OrderStatus.Removed,
+            archived: false
+          };
+
+          bidsUpdatePromise = Bid.updateMany(
+            {
+              order: order._id
+            },
+            {
+              status: BidStatus.TerminatedByClient
+            }
+          );
+
+          break;
+        case OrderStatus.InProgress:
+          orderStatus = {
+            status: OrderStatus.TerminatedByClient,
+            archived: false
+          };
+
+          bidsUpdatePromise = Bid.findByIdAndUpdate(order.approvedBid, {
+            status: BidStatus.TerminatedByClient
+          });
+
+          break;
+        default:
+          orderStatus = {
+            status: order.status,
+            archived: true
+          };
+
+          bidsUpdatePromise = Promise.resolve();
+
+          break;
       }
 
-      await order.update({ status: OrderStatus.Removed });
+      await Promise.all([order.update(orderStatus), bidsUpdatePromise]);
 
       res.response();
     })

@@ -35,6 +35,7 @@ export interface IOrderDocument extends Document {
   budget: number;
   urgent: boolean;
   status: OrderStatus;
+  archived: boolean;
   media: IFileDocument[];
 
   toJSON: () => IOrderDocument;
@@ -112,6 +113,10 @@ const OrderSchema = new Schema(
     status: {
       type: Number,
       default: OrderStatus.Placed
+    },
+    archived: {
+      type: Boolean,
+      default: false
     },
     media: [FileSchema]
   },
