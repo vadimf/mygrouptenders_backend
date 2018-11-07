@@ -49,17 +49,33 @@ export const bidPopulation: ModelPopulateOptions[] = [
   }
 ];
 
+export const bidPopulationForProvider: ModelPopulateOptions[] = [
+  {
+    path: 'order',
+    populate: [
+      { path: 'client' },
+      { path: 'categories', populate: { path: 'parent' } }
+    ]
+  }
+];
+
 export const BidSchema = new Schema(
   {
     order: {
       type: Schema.Types.ObjectId,
       ref: 'Order',
-      required: true
+      required: true,
+      set: function(value: Types.ObjectId) {
+        return this.order || value;
+      }
     },
     provider: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      required: true,
+      set: function(value: Types.ObjectId) {
+        return this.provider || value;
+      }
     },
     status: {
       type: Schema.Types.Number,
@@ -71,7 +87,14 @@ export const BidSchema = new Schema(
     },
     bid: {
       type: Schema.Types.Number,
-      required: true
+      required: true,
+      set: function(value: number) {
+        if (typeof this.bid === 'number' && this.bid !== value) {
+          this.prevBids = [...this.prevBids, this.bid];
+        }
+
+        return value;
+      }
     },
     prevBids: [Schema.Types.Number],
     comment: {

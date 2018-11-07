@@ -4,7 +4,12 @@ import { sanitizeQuery } from 'express-validator/filter';
 import { Types } from 'mongoose';
 
 import { AppError } from '../../../models/app-error';
-import { Bid, IBidSearchConditions } from '../../../models/bid/bid';
+import { AppErrorWithData } from '../../../models/app-error-with-data';
+import {
+  Bid,
+  bidPopulationForProvider,
+  IBidSearchConditions
+} from '../../../models/bid/bid';
 import { BidSearch } from '../../../models/bid/search';
 import { BidStatus, OrderStatus } from '../../../models/enums';
 import { Order } from '../../../models/order/order';
@@ -52,15 +57,7 @@ router
       const search = new BidSearch(page || 1, conditions);
 
       res.response({
-        bids: await search.getResults([
-          {
-            path: 'order',
-            populate: [
-              { path: 'client' },
-              { path: 'categories', populate: { path: 'parent' } }
-            ]
-          }
-        ]),
+        bids: await search.getResults(bidPopulationForProvider),
         pagination: await search.getPagination()
       });
     })
@@ -81,6 +78,31 @@ router
       }
 
       next();
+    })
+  )
+
+  /**
+   * Update bid
+   */
+  .put(
+    asyncMiddleware(async (req: Request, res: Response) => {
+      const bid = req.locals.bid;
+
+      delete req.body.status;
+      delete req.body.archived;
+      delete req.body.prevBids;
+
+      bid.set(req.body);
+
+      try {
+        await bid.save();
+      } catch (e) {
+        throw new AppErrorWithData(AppError.RequestValidation, e);
+      }
+
+      res.response({
+        bid: await bid.populate(bidPopulationForProvider).execPopulate()
+      });
     })
   )
 
