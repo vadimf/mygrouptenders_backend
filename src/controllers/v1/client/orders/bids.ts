@@ -3,7 +3,7 @@ import { param } from 'express-validator/check';
 import { Types } from 'mongoose';
 
 import { AppError } from '../../../../models/app-error';
-import { Bid, IBidDocument } from '../../../../models/bid/bid';
+import { Bid } from '../../../../models/bid/bid';
 import { BidSearch } from '../../../../models/bid/search';
 import { BidStatus, OrderStatus } from '../../../../models/enums';
 import { IOrderDocument } from '../../../../models/order/order';
@@ -68,11 +68,10 @@ router
     asyncMiddleware(async (req: Request, res: Response) => {
       const { order, bid } = req.locals;
 
-      if (order.status !== OrderStatus.Placed) {
-        throw AppError.ActionNotAllowed;
-      }
-
-      if (!(bid.order as Types.ObjectId).equals(order._id)) {
+      if (
+        order.status !== OrderStatus.Placed ||
+        !(bid.order as Types.ObjectId).equals(order._id)
+      ) {
         throw AppError.ActionNotAllowed;
       }
 
@@ -81,7 +80,21 @@ router
       order.status = OrderStatus.InProgress;
       order.approvedBid = bid._id;
 
-      await Promise.all([bid.save(), order.save()]);
+      await Promise.all([
+        bid.save(),
+        order.save(),
+        Bid.updateMany(
+          {
+            _id: {
+              $ne: bid._id
+            },
+            order: order._id
+          },
+          {
+            status: BidStatus.Rejected
+          }
+        )
+      ]);
 
       // TODO send notification
 

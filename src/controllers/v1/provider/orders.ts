@@ -76,6 +76,9 @@ router
     })
   )
 
+  /**
+   * Place a bid
+   */
   .post(
     '/:id/bid',
     [param('id').isMongoId()],
@@ -118,7 +121,7 @@ router
       }
 
       res.status(201).response({
-        bid: await bid.populateAll()
+        bid
       });
     })
   );
