@@ -12,7 +12,7 @@ import {
 } from '../../../models/bid/bid';
 import { BidSearch } from '../../../models/bid/search';
 import { BidStatus, OrderStatus } from '../../../models/enums';
-import { Order } from '../../../models/order/order';
+import { IOrderDocument, Order } from '../../../models/order/order';
 import asyncMiddleware, {
   sanitizeQueryToArray,
   validatePageParams
@@ -102,6 +102,33 @@ router
 
       res.response({
         bid: await bid.populate(bidPopulationForProvider).execPopulate()
+      });
+    })
+  )
+
+  /**
+   * Complete order
+   */
+  .patch(
+    asyncMiddleware(async (req: Request, res: Response) => {
+      const bid = await req.locals.bid
+        .populate(bidPopulationForProvider)
+        .execPopulate();
+      const order = bid.order as IOrderDocument;
+
+      if (
+        order.status !== OrderStatus.InProgress ||
+        bid.status !== BidStatus.Approved
+      ) {
+        throw AppError.ActionNotAllowed;
+      }
+
+      order.status = OrderStatus.Completed;
+
+      await order.save();
+
+      res.response({
+        bid
       });
     })
   )
