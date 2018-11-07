@@ -1,10 +1,13 @@
-import { Request, Response, Router } from 'express';
-import { query } from 'express-validator/check';
+import { NextFunction, Request, Response, Router } from 'express';
+import { param, query } from 'express-validator/check';
+import { sanitizeQuery } from 'express-validator/filter';
+import { Types } from 'mongoose';
 
-import { sanitizeQuery } from '../../../../node_modules/express-validator/filter';
-import { IBidSearchConditions } from '../../../models/bid/bid';
+import { AppError } from '../../../models/app-error';
+import { Bid, IBidSearchConditions } from '../../../models/bid/bid';
 import { BidSearch } from '../../../models/bid/search';
-import { BidStatus } from '../../../models/enums';
+import { BidStatus, OrderStatus } from '../../../models/enums';
+import { Order } from '../../../models/order/order';
 import asyncMiddleware, {
   sanitizeQueryToArray,
   validatePageParams
@@ -12,50 +15,117 @@ import asyncMiddleware, {
 
 const router = Router();
 
-router.get(
-  '/',
-  validatePageParams(),
-  [
-    sanitizeQueryToArray('status'),
-    query('status.*').isIn(Object.values(BidStatus)),
-    query('archived')
-      .optional()
-      .isBoolean(),
-    sanitizeQuery('archived').toBoolean()
-  ],
-  asyncMiddleware(async (req: Request, res: Response) => {
-    req.validateRequest();
+router
 
-    const { page, archived, status: statuses } = req.query;
-    let conditions: IBidSearchConditions = {
-      provider: req.user._id,
-      archived: archived === false || archived === true ? archived : false
-    };
+  /**
+   * Get all provider's bids
+   */
+  .get(
+    '/',
+    validatePageParams(),
+    [
+      sanitizeQueryToArray('status'),
+      query('status.*').isIn(Object.values(BidStatus)),
+      query('archived')
+        .optional()
+        .isBoolean(),
+      sanitizeQuery('archived').toBoolean()
+    ],
+    asyncMiddleware(async (req: Request, res: Response) => {
+      req.validateRequest();
 
-    if (!!statuses) {
-      conditions = {
-        ...conditions,
-        status: {
-          $in: statuses
-        }
+      const { page, archived, status: statuses } = req.query;
+      let conditions: IBidSearchConditions = {
+        provider: req.user._id,
+        archived: archived === false || archived === true ? archived : false
       };
-    }
 
-    const search = new BidSearch(page || 1, conditions);
+      if (!!statuses) {
+        conditions = {
+          ...conditions,
+          status: {
+            $in: statuses
+          }
+        };
+      }
 
-    res.response({
-      bids: await search.getResults([
-        {
-          path: 'order',
-          populate: [
-            { path: 'client' },
-            { path: 'categories', populate: { path: 'parent' } }
-          ]
-        }
-      ]),
-      pagination: await search.getPagination()
-    });
-  })
-);
+      const search = new BidSearch(page || 1, conditions);
+
+      res.response({
+        bids: await search.getResults([
+          {
+            path: 'order',
+            populate: [
+              { path: 'client' },
+              { path: 'categories', populate: { path: 'parent' } }
+            ]
+          }
+        ]),
+        pagination: await search.getPagination()
+      });
+    })
+  )
+
+  .route('/:id')
+  .all(
+    [param('id').isMongoId()],
+    asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+      const bid = (req.locals.bid = await Bid.findById(req.params.id));
+
+      if (!bid) {
+        throw AppError.ObjectDoesNotExist;
+      }
+
+      if (!(bid.provider as Types.ObjectId).equals(req.user._id)) {
+        throw AppError.NotAuthenticated;
+      }
+
+      next();
+    })
+  )
+
+  /**
+   * Remove bid
+   */
+  .delete(
+    asyncMiddleware(async (req: Request, res: Response) => {
+      const bid = req.locals.bid;
+      let orderUpdatePromise: any = Promise.resolve();
+
+      // TODO notifications
+
+      switch (bid.status) {
+        case BidStatus.Rejected:
+        case BidStatus.Placed:
+          bid.status = BidStatus.Removed;
+
+          break;
+        case BidStatus.Approved:
+          const order = await Order.findById(bid.order);
+
+          switch (order.status) {
+            case OrderStatus.InProgress:
+              order.status = OrderStatus.Placed;
+              order.approvedBid = null;
+
+              orderUpdatePromise = order.save();
+
+              bid.status = BidStatus.TerminatedByProvider;
+
+              break;
+            case OrderStatus.Completed:
+              bid.archived = true;
+
+              break;
+          }
+
+          break;
+      }
+
+      await Promise.all([bid.save(), orderUpdatePromise]);
+
+      res.response();
+    })
+  );
 
 export default router;

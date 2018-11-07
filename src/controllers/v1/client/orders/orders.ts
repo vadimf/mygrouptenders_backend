@@ -6,6 +6,7 @@ import {
   param,
   query
 } from '../../../../../node_modules/express-validator/check';
+import { sanitizeQuery } from '../../../../../node_modules/express-validator/filter';
 import { AppError } from '../../../../models/app-error';
 import { AppErrorWithData } from '../../../../models/app-error-with-data';
 import { Bid } from '../../../../models/bid/bid';
@@ -43,16 +44,20 @@ router
     validatePageParams(),
     [
       sanitizeQueryToArray('status'),
-      query('status.*').isIn(Object.values(OrderStatus))
+      query('status.*').isIn(Object.values(OrderStatus)),
+      query('archived')
+        .optional()
+        .isBoolean(),
+      sanitizeQuery('archived').toBoolean()
     ],
     asyncMiddleware(async (req: Request, res: Response) => {
       req.validateRequest();
 
-      const { status: statuses, page } = req.query;
+      const { status: statuses, page, archived } = req.query;
 
       let conditions: any = {
         client: req.user._id,
-        status: { $ne: OrderStatus.Removed }
+        archived: archived === false || archived === true ? archived : false
       };
 
       if (!!statuses) {
@@ -209,17 +214,13 @@ router
       req.validateRequest();
 
       const order = req.locals.order;
-      let orderStatus;
-      let bidsUpdatePromise;
+      let bidsUpdatePromise: any = Promise.resolve();
 
       // TODO notification
 
       switch (order.status) {
         case OrderStatus.Placed:
-          orderStatus = {
-            status: OrderStatus.Removed,
-            archived: false
-          };
+          order.status = OrderStatus.Removed;
 
           bidsUpdatePromise = Bid.updateMany(
             {
@@ -232,10 +233,7 @@ router
 
           break;
         case OrderStatus.InProgress:
-          orderStatus = {
-            status: OrderStatus.TerminatedByClient,
-            archived: false
-          };
+          order.status = OrderStatus.TerminatedByClient;
 
           bidsUpdatePromise = Bid.findByIdAndUpdate(order.approvedBid, {
             status: BidStatus.TerminatedByClient
@@ -243,17 +241,12 @@ router
 
           break;
         default:
-          orderStatus = {
-            status: order.status,
-            archived: true
-          };
-
-          bidsUpdatePromise = Promise.resolve();
+          order.archived = true;
 
           break;
       }
 
-      await Promise.all([order.update(orderStatus), bidsUpdatePromise]);
+      await Promise.all([order.save(), bidsUpdatePromise]);
 
       res.response();
     })

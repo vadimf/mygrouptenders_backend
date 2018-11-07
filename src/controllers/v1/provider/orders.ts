@@ -48,6 +48,7 @@ router
         client: {
           $ne: req.user._id
         },
+        status: OrderStatus.Placed,
         categories: {
           $in:
             !!filterCategories && !!filterCategories.length
