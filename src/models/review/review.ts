@@ -1,4 +1,4 @@
-import { Document, model, Model, Schema, Types } from 'mongoose';
+import { Document, Model, model, Schema, Types } from 'mongoose';
 
 import { SystemConfiguration } from '../system-configuration';
 import { IUserDocument } from '../user/user';
@@ -26,12 +26,14 @@ export const ReviewSchema = new Schema(
     },
     review: {
       type: Schema.Types.String,
+      required: true,
       validate: function(value: string) {
         return SystemConfiguration.validations.providerReview.isValid(value);
       }
     },
     rating: {
       type: Schema.Types.Number,
+      required: true,
       validate: function(value: number) {
         return SystemConfiguration.validations.reviewRating.isValid(value);
       }
