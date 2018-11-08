@@ -88,6 +88,10 @@ router
     asyncMiddleware(async (req: Request, res: Response) => {
       const bid = req.locals.bid;
 
+      if (bid.status === BidStatus.Approved) {
+        throw AppError.ActionNotAllowed;
+      }
+
       delete req.body.status;
       delete req.body.archived;
       delete req.body.prevBids;

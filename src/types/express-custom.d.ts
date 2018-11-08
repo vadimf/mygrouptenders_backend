@@ -16,6 +16,7 @@ declare global {
         phone?: IPhoneNumberDocument;
         order?: IOrderDocument;
         bid?: IBidDocument;
+        provider?: IUserDocument;
       };
       mobileDevice(): boolean;
     }

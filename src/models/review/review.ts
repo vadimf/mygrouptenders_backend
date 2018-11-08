@@ -1,16 +1,18 @@
-import { Document, model, Schema, Types } from 'mongoose';
+import { Document, model, Model, Schema, Types } from 'mongoose';
 
 import { SystemConfiguration } from '../system-configuration';
-import { IUserDocument } from './user';
+import { IUserDocument } from '../user/user';
 
-export interface IFeedbackDocument extends Document {
+export interface IReviewDocument extends Document {
   provider: Types.ObjectId | IUserDocument;
   client: Types.ObjectId | IUserDocument;
   review: string;
   rating: number;
 }
 
-export const FeedbackSchema = new Schema(
+export interface IReviewModel extends Model<IReviewDocument> {}
+
+export const ReviewSchema = new Schema(
   {
     provider: {
       type: Schema.Types.ObjectId,
@@ -31,7 +33,7 @@ export const FeedbackSchema = new Schema(
     rating: {
       type: Schema.Types.Number,
       validate: function(value: number) {
-        return SystemConfiguration.validations.feedbackRating.isValid(value);
+        return SystemConfiguration.validations.reviewRating.isValid(value);
       }
     }
   },
@@ -40,6 +42,6 @@ export const FeedbackSchema = new Schema(
   }
 );
 
-FeedbackSchema.set('toJSON', { versionKey: false });
+ReviewSchema.set('toJSON', { versionKey: false });
 
-export const Feedback = model<IFeedbackDocument>('Feedback', FeedbackSchema);
+export const Review = model<IReviewDocument>('Review', ReviewSchema);

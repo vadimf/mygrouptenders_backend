@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { Types } from 'mongoose';
 import multer = require('multer');
 
+import { param } from '../../../../node_modules/express-validator/check';
 import { AppError } from '../../../models/app-error';
 import { User } from '../../../models/user/user';
 import asyncMiddleware, {
@@ -96,14 +97,12 @@ router
 
 router.get(
   '/:id',
+  [param('id').isMongoId()],
   asyncMiddleware(async (req: Request, res: Response) => {
-    // req.checkParams('id', 'ID is not valid').isMongoId();
+    req.validateRequest();
 
-    await req.validateRequest();
-
-    const userId = Types.ObjectId(req.params.id);
     const user = await User.getSingle({
-      _id: userId,
+      _id: Types.ObjectId(req.params.id),
       blocked: {
         $ne: true
       }
