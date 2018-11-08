@@ -3,6 +3,10 @@ import { Document, Model, model, Schema, Types } from 'mongoose';
 import { SystemConfiguration } from '../system-configuration';
 import { IUserDocument } from '../user/user';
 
+export interface IReviewSearchParams {
+  provider?: any;
+}
+
 export interface IReviewDocument extends Document {
   provider: Types.ObjectId | IUserDocument;
   client: Types.ObjectId | IUserDocument;

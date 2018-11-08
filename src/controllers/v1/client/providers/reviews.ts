@@ -1,10 +1,11 @@
 import { Request, Response, Router } from 'express';
+import { Types } from 'mongoose';
 
 import { AppError } from '../../../../models/app-error';
 import { AppErrorWithData } from '../../../../models/app-error-with-data';
 import { OrderStatus } from '../../../../models/enums';
 import { Order } from '../../../../models/order/order';
-import { Review } from '../../../../models/review/review';
+import { IReviewSearchParams, Review } from '../../../../models/review/review';
 import asyncMiddleware from '../../../../utilities/async-middleware';
 
 const router = Router();
@@ -16,9 +17,144 @@ router
    */
   .get(
     asyncMiddleware(async (req: Request, res: Response) => {
-      res.response();
+      const { provider } = req.locals;
+
+      const conditions: IReviewSearchParams = {
+        provider: provider._id
+      };
+
+      let [results] = await Review.aggregate([
+        {
+          $match: conditions
+        },
+        {
+          $facet: {
+            reviews: [
+              {
+                $match: {}
+              }
+            ],
+            clientsReview: [
+              {
+                $match: {
+                  client: req.user._id
+                }
+              },
+              {
+                $limit: 1
+              }
+            ],
+            orders: [
+              {
+                $limit: 1
+              },
+              {
+                $lookup: {
+                  from: 'orders',
+                  let: { client: req.user._id },
+                  pipeline: [
+                    {
+                      $match: {
+                        $expr: {
+                          $and: [
+                            { $eq: ['$client', '$$client'] },
+                            { $eq: ['$status', OrderStatus.Completed] }
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      $lookup: {
+                        from: 'bids',
+                        localField: 'approvedBid',
+                        foreignField: '_id',
+                        as: 'approvedBid'
+                      }
+                    },
+                    {
+                      $unwind: '$approvedBid'
+                    },
+                    {
+                      $match: {
+                        'approvedBid.provider': provider._id
+                      }
+                    },
+                    {
+                      $count: 'count'
+                    }
+                  ],
+                  as: 'orders'
+                }
+              },
+              {
+                $unwind: '$orders'
+              },
+              {
+                $replaceRoot: {
+                  newRoot: '$orders'
+                }
+              }
+            ]
+          }
+        },
+        {
+          $unwind: {
+            path: '$clientsReview',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $unwind: {
+            path: '$orders',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $addFields: {
+            canLeaveReview: {
+              $cond: {
+                if: { $gt: ['$orders.count', 0] },
+                then: true,
+                else: false
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            orders: 0
+          }
+        }
+      ]);
+
+      if (!!results) {
+        results = {
+          ...results,
+          reviews: await Review.populate(
+            results.reviews.map((review: any) => new Review(review, false)),
+            {
+              path: 'client'
+            }
+          )
+        };
+      } else {
+        const [completedOrder] = await getCompletedOrders(
+          req.user._id,
+          provider._id
+        );
+
+        results = {
+          reviews: [],
+          canLeaveReview: !!completedOrder
+        };
+      }
+
+      res.response({
+        ...results
+      });
     })
   )
+
   /**
    * Create new review
    */
@@ -27,30 +163,10 @@ router
       const { provider } = req.locals;
       const oldRating = provider.provider.rating;
 
-      const [completedOrder] = await Order.aggregate([
-        {
-          $match: {
-            client: req.user._id,
-            status: OrderStatus.Completed
-          }
-        },
-        {
-          $lookup: {
-            from: 'bids',
-            localField: 'approvedBid',
-            foreignField: '_id',
-            as: 'approvedBid'
-          }
-        },
-        {
-          $unwind: '$approvedBid'
-        },
-        {
-          $match: {
-            'approvedBid.provider': provider._id
-          }
-        }
-      ]);
+      const [completedOrder] = await getCompletedOrders(
+        req.user._id,
+        provider._id
+      );
 
       if (!completedOrder) {
         throw AppError.ActionNotAllowed;
@@ -89,5 +205,35 @@ router
       });
     })
   );
+
+async function getCompletedOrders(
+  clientId: Types.ObjectId,
+  providerId: Types.ObjectId
+) {
+  return await Order.aggregate([
+    {
+      $match: {
+        client: clientId,
+        status: OrderStatus.Completed
+      }
+    },
+    {
+      $lookup: {
+        from: 'bids',
+        localField: 'approvedBid',
+        foreignField: '_id',
+        as: 'approvedBid'
+      }
+    },
+    {
+      $unwind: '$approvedBid'
+    },
+    {
+      $match: {
+        'approvedBid.provider': providerId
+      }
+    }
+  ]);
+}
 
 export default router;
