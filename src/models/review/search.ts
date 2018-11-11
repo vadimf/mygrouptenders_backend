@@ -16,7 +16,7 @@ export class ReviewSearch extends SearchEngine<IReviewDocument, IReviewModel> {
     throw new Error('Method not implemented.');
   }
 
-  public async aggregateResults(pathToList: string) {
+  public async aggregateResults() {
     throw new Error('Method not implemented.');
   }
 }

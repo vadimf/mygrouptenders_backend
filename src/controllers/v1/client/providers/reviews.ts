@@ -1,4 +1,5 @@
 import { Request, Response, Router } from 'express';
+import { param } from 'express-validator/check';
 import { Types } from 'mongoose';
 
 import { AppError } from '../../../../models/app-error';
@@ -205,6 +206,62 @@ router
       });
     })
   );
+
+router.put(
+  '/:id',
+  [param('id').isMongoId()],
+  asyncMiddleware(async (req: Request, res: Response) => {
+    req.validateRequest();
+
+    const { provider } = req.locals;
+    const oldRating = provider.provider.rating;
+
+    const review = await Review.findById(req.params.id);
+
+    if (!review) {
+      throw AppError.ObjectDoesNotExist;
+    }
+
+    if (!(review.client as Types.ObjectId).equals(req.user._id)) {
+      throw AppError.NotAuthenticated;
+    }
+
+    delete req.params.client;
+    delete req.params.provider;
+
+    const oldFeedbackRating = review.rating;
+
+    review.set(req.body);
+
+    try {
+      await review.validate();
+    } catch (e) {
+      throw new AppErrorWithData(AppError.RequestValidation, e);
+    }
+
+    const newRating = {
+      ...provider.provider.rating.toObject(),
+      ratingsSum: oldRating.ratingsSum - oldFeedbackRating + review.rating
+    };
+
+    provider.provider.set('rating', newRating);
+
+    try {
+      await provider.provider.rating.validate();
+    } catch (e) {
+      throw new AppErrorWithData(AppError.RequestValidation, e);
+    }
+
+    await Promise.all([
+      review.save({ validateBeforeSave: false }),
+      provider.save({ validateBeforeSave: false })
+    ]);
+
+    res.response({
+      review
+    });
+  })
+);
 
 async function getCompletedOrders(
   clientId: Types.ObjectId,
