@@ -149,15 +149,17 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  let language: string = req.header('x-language');
+  // let language: string = req.header('x-language');
+  //
+  // if (!language) {
+  //   language = req.query.language;
+  //
+  //   if (!language) {
+  //     language = 'he';
+  //   }
+  // }
 
-  if (!language) {
-    language = req.query.language;
-
-    if (!language) {
-      language = 'he';
-    }
-  }
+  const language = 'he';
 
   app.set('language', language);
 

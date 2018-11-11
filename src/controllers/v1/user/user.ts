@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from 'express';
 import { Types } from 'mongoose';
 import multer = require('multer');
 
-import { param } from '../../../../node_modules/express-validator/check';
+import { param } from 'express-validator/check';
 import { AppError } from '../../../models/app-error';
 import { User } from '../../../models/user/user';
 import asyncMiddleware, {
@@ -56,7 +56,7 @@ router
         next();
       }
     }),
-    asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+    asyncMiddleware(async (req: Request, res: Response) => {
       req.user.set(req.body);
 
       await req.user.save();
@@ -94,6 +94,40 @@ router
 
     next();
   }, respondWithUserObject());
+
+router
+  .put(
+    '/notifications',
+    asyncMiddleware(async (req: Request, res: Response) => {
+       const receivedToken = req.body.token || '';
+
+       req.authToken.firebaseToken = receivedToken;
+
+       if ( receivedToken ) {
+         const conditions = {
+             'tokens.firebaseToken': receivedToken,
+         };
+
+         const update = {
+             $set: {
+                 'tokens.$.firebaseToken': '',
+             },
+         };
+
+         const options = {
+             multi: true,
+         };
+
+         await User.update(conditions, update, options);
+       }
+
+       if ( req.user.isModified() ) {
+         req.user.save();
+       }
+
+       res.response();
+    })
+  );
 
 router.get(
   '/:id',
