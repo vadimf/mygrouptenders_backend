@@ -1,5 +1,11 @@
 // Enums goes here...
 
+export enum UserRole {
+  All,
+  Client,
+  Provider
+}
+
 export enum OrderStatus {
   Placed,
   InProgress,
@@ -15,4 +21,20 @@ export enum BidStatus {
   TerminatedByClient,
   TerminatedByProvider,
   Removed
+}
+
+export enum NotificationStatus {
+  Created,
+  Removed
+}
+
+export enum NotificationType {
+  OrderExpired,
+  BidPlaced,
+  BidApproved,
+  OrderExpiresInOneHour,
+  BidDecreased,
+  BidIncreased,
+  OrderCompleted,
+  OrderCanceled
 }

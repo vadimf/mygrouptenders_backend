@@ -8,6 +8,7 @@ import { IAreaDocument } from '../../../models/area';
 import { Bid } from '../../../models/bid/bid';
 import { ICategoryDocument } from '../../../models/category';
 import { OrderStatus } from '../../../models/enums';
+import { Notification } from '../../../models/notification/notification';
 import { IOrderSearchConditions, Order } from '../../../models/order/order';
 import { OrderSearch } from '../../../models/order/search';
 import { User } from '../../../models/user/user';
@@ -122,13 +123,14 @@ router
         throw new AppErrorWithData(AppError.RequestValidation, e);
       }
 
-      const orderClient = await User.getSingle({_id: order.client});
-      const notification = new CustomNotificationSender(orderClient);
+      const orderClient = await User.getSingle({ _id: order.client });
+      const notificationSender = new CustomNotificationSender(orderClient);
 
-      notification
-        .bidGenerated(order, bid, req.user)
+      notificationSender
+        .bidPlaced(order, bid, req.user)
         .send()
-        .then().catch();
+        .then()
+        .catch();
 
       res.status(201).response({
         bid

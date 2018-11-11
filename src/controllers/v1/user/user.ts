@@ -95,39 +95,38 @@ router
     next();
   }, respondWithUserObject());
 
-router
-  .put(
-    '/notifications',
-    asyncMiddleware(async (req: Request, res: Response) => {
-       const receivedToken = req.body.token || '';
+router.put(
+  '/notifications',
+  asyncMiddleware(async (req: Request, res: Response) => {
+    const receivedToken = req.body.token || '';
 
-       req.authToken.firebaseToken = receivedToken;
+    req.authToken.firebaseToken = receivedToken;
 
-       if ( receivedToken ) {
-         const conditions = {
-             'tokens.firebaseToken': receivedToken,
-         };
+    if (receivedToken) {
+      const conditions = {
+        'tokens.firebaseToken': receivedToken
+      };
 
-         const update = {
-             $set: {
-                 'tokens.$.firebaseToken': '',
-             },
-         };
+      const update = {
+        $set: {
+          'tokens.$.firebaseToken': ''
+        }
+      };
 
-         const options = {
-             multi: true,
-         };
+      const options = {
+        multi: true
+      };
 
-         await User.update(conditions, update, options);
-       }
+      await User.update(conditions, update, options);
+    }
 
-       if ( req.user.isModified() ) {
-         req.user.save();
-       }
+    if (req.user.isModified()) {
+      await req.user.save();
+    }
 
-       res.response();
-    })
-  );
+    res.response();
+  })
+);
 
 router.get(
   '/:id',
