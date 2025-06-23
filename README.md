@@ -1,3 +1,9 @@
+This repository contains a server side code developed by **Globalbit**, aimed at accelerating server side development of secured and scalable platforms for Enterprises.
+
+These utilities are part of our internal toolkit used in building scalable, high-performance applications for clients in healthcare, mobility, finance, and beyond.
+
+
+
 # TypeScript Node Starter
 
 [![Dependency Status](https://david-dm.org/Microsoft/TypeScript-Node-Starter.svg)](https://david-dm.org/Microsoft/TypeScript-Node-Starter) [![Build Status](https://travis-ci.org/Microsoft/TypeScript-Node-Starter.svg?branch=master)](https://travis-ci.org/Microsoft/TypeScript-Node-Starter) 
@@ -415,3 +421,29 @@ Here is a section of miscellaneous tips.
 
 # Hackathon Starter Project
 A majority of this quick start's content was inspired or adapted from Sahat's excellent [Hackathon Starter project](https://github.com/sahat/hackathon-starter).
+
+## 🏗 Built by Globalbit
+
+**Globalbit** is an Israeli software company trusted by governments, Fortune 500 companies, and leading startups to build robust digital systems — including native mobile platforms that serve **200M+ users** globally.
+
+### 🔍 What We Do:
+- Native & hybrid mobile development (iOS, Android, Flutter, React Native)
+- Backend APIs, orchestration layers & cloud architecture
+- UX/UI systems design and performance optimization
+
+---
+
+## 📎 Integration Notes
+
+This repo is designed to be modular — simply import what you need.  
+See `/docs` or inline comments in each file for usage examples.
+
+---
+
+## 📞 Let’s Build Digital Together
+
+Globalbit’s mobile stack is designed for reliability, speed, and real-world scale.  
+Whether you're launching a new app or modernizing an existing one — we can help.
+
+📩 [info@globalbit.co.il](mailto:info@globalbit.co.il)  
+🌐 [globalbit.co.il](https://globalbit.co.il)
